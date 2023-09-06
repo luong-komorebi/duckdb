@@ -8,7 +8,7 @@ def format_tpch_queries(target_dir, tpch_in, comment):
 
     for i in range(1, 23):
         qnr = '%02d' % (i,)
-        target_file = os.path.join(target_dir, 'q' + qnr + '.benchmark')
+        target_file = os.path.join(target_dir, f'q{qnr}.benchmark')
         new_text = '''# name: %s
 # description: Run query %02d from the TPC-H benchmark (%s)
 # group: [sf1]

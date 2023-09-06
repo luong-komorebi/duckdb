@@ -53,10 +53,7 @@ parser.add_argument(
 
 args = parser.parse_args()
 
-build_config = 'debug'
-if args.release is not None:
-    build_config = 'release'
-
+build_config = 'release' if args.release is not None else 'debug'
 odbc_build_dir = os.path.join(args.psqlodbcdir, 'build', build_config)
 odbc_reset = os.path.join(odbc_build_dir, 'reset-db')
 odbc_test = os.path.join(odbc_build_dir, 'psql_odbc_test')
@@ -67,7 +64,7 @@ def reset_db():
     try_remove(os.path.join(args.psqlodbcdir, 'contrib_regression'))
     try_remove(os.path.join(args.psqlodbcdir, 'contrib_regression.wal'))
 
-    command = odbc_reset + f' < {args.psqlodbcdir}/sampletables.sql'
+    command = f'{odbc_reset} < {args.psqlodbcdir}/sampletables.sql'
     syscall(command, 'Failed to reset db')
 
 
@@ -102,7 +99,14 @@ if not os.path.isdir(args.psqlodbcdir):
 if args.overwrite:
     odbc_lib = args.odbclib
     if odbc_lib is None:
-        odbc_lib = os.path.join(os.getcwd(), 'build', build_config, 'tools', 'odbc', 'libduckdb_odbc' + so_suffix)
+        odbc_lib = os.path.join(
+            os.getcwd(),
+            'build',
+            build_config,
+            'tools',
+            'odbc',
+            f'libduckdb_odbc{so_suffix}',
+        )
     if not os.path.isfile(odbc_lib):
         print(f'ERROR: Could not find the library file {odbc_lib}, specify the --odbc_lib [file] option')
         exit(1)
@@ -115,7 +119,7 @@ TraceFile = {args.tracefile}
 Driver = {odbc_lib}
 '''
 
-    odbc_ini = f'''[DuckDB]
+    odbc_ini = '''[DuckDB]
 Driver = DuckDB Driver
 Database=:memory:
 '''
@@ -152,9 +156,7 @@ else:
 odbc_test = os.path.join(odbc_build_dir, 'psql_odbc_test')
 
 if args.debugger is not None:
-    argstart = '--args'
-    if args.debugger == 'lldb':
-        argstart = '--'
+    argstart = '--' if args.debugger == 'lldb' else '--args'
     print("=============================================")
     print("Run the following command to start a debugger")
     print("=============================================")
@@ -164,4 +166,4 @@ if args.debugger is not None:
 for test in test_list:
     fix_suffix = ' --fix' if args.fix is not None else ''
     print(f"Running test {test}")
-    syscall(odbc_test + ' ' + test + fix_suffix, f"Failed to run test {test}")
+    syscall(f'{odbc_test} {test}{fix_suffix}', f"Failed to run test {test}")

@@ -46,14 +46,10 @@ class TestNumpyNullableTypes(object):
         if version.parse(pd.__version__) >= version.parse('1.2.0'):
             # These DTypes where added in 1.2.0
             data_types.extend(["Float32", "Float64"])
-        # Generate a dataframe with all the types, in the form of:
-        # b=type1,
-        # c=type2
-        # ..
-        data = {}
-        for letter, dtype in zip(string.ascii_lowercase, data_types):
-            data[letter] = base_df.a.astype(dtype)
-
+        data = {
+            letter: base_df.a.astype(dtype)
+            for letter, dtype in zip(string.ascii_lowercase, data_types)
+        }
         df = pd.DataFrame.from_dict(data)
         conn = duckdb.connect()
         out_df = conn.execute('select * from df').df()

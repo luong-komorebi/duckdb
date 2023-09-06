@@ -20,16 +20,12 @@ if len(sys.argv) < 2:
     print("Expected usage: python3 scripts/run_tests_one_by_one.py build/debug/test/unittest [--no-exit] [--profile]")
     exit(1)
 unittest_program = sys.argv[1]
-extra_args = []
-if len(sys.argv) > 2:
-    extra_args = [sys.argv[2]]
-
-
+extra_args = [sys.argv[2]] if len(sys.argv) > 2 else []
 proc = subprocess.Popen([unittest_program, '-l'] + extra_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 stdout = proc.stdout.read().decode('utf8')
 stderr = proc.stderr.read().decode('utf8')
 if proc.returncode is not None and proc.returncode != 0:
-    print("Failed to run program " + unittest_program)
+    print(f"Failed to run program {unittest_program}")
     print(proc.returncode)
     print(stdout)
     print(stderr)
@@ -50,7 +46,7 @@ test_count = len(test_cases)
 return_code = 0
 for test_number in range(test_count):
     if not profile:
-        print("[" + str(test_number) + "/" + str(test_count) + "]: " + test_cases[test_number])
+        print(f"[{str(test_number)}/{test_count}]: {test_cases[test_number]}")
     start = time.time()
     res = subprocess.run([unittest_program, test_cases[test_number]], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout = res.stdout.decode('utf8')

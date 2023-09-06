@@ -41,7 +41,7 @@ class TestArrowTimestampsTimezone(object):
         con = duckdb.connect()
         for precision in precisions:
             for timezone in timezones:
-                con.execute("SET TimeZone = '" + timezone + "'")
+                con.execute(f"SET TimeZone = '{timezone}'")
                 arrow_table = generate_table(current_time, precision, timezone)
                 res = con.from_arrow(arrow_table).arrow()
                 assert res[0].type == pa.timestamp('us', tz=timezone)

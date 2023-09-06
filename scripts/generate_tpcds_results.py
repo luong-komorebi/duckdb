@@ -113,7 +113,7 @@ queries.sort()
 answer_dir = args.answer_dir.replace('${SF}', args.sf)
 
 if len(args.query_list) > 0:
-    passing_queries = [x + '.sql' for x in args.query_list.split(',')]
+    passing_queries = [f'{x}.sql' for x in args.query_list.split(',')]
     queries = [x for x in queries if x in passing_queries]
     queries.sort()
 
@@ -124,7 +124,7 @@ def run_query(q):
         sql_query = f.read()
     answer_path = os.path.join(os.getcwd(), answer_dir, q.replace('.sql', '.csv'))
     c.execute(f'DROP TABLE IF EXISTS "query_result{q}"')
-    c.execute(f'CREATE TABLE "query_result{q}" AS ' + sql_query)
+    c.execute(f'CREATE TABLE "query_result{q}" AS {sql_query}')
     c.execute(f"COPY \"query_result{q}\" TO '{answer_path}' (FORMAT CSV, DELIMITER '|', HEADER, NULL 'NULL')")
 
 

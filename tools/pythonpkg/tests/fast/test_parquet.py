@@ -13,8 +13,7 @@ filename = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data', 'bi
 @pytest.fixture(scope="session")
 def tmp_parquets(tmp_path_factory):
     tmp_dir = tmp_path_factory.mktemp('parquets', numbered=True)
-    tmp_parquets = [str(tmp_dir / ('tmp' + str(i) + '.parquet')) for i in range(1, 4)]
-    return tmp_parquets
+    return [str(tmp_dir / f'tmp{str(i)}.parquet') for i in range(1, 4)]
 
 
 class TestParquet(object):

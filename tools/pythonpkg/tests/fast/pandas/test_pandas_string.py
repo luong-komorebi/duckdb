@@ -31,15 +31,10 @@ class TestPandasString(object):
         con = duckdb.connect()
         con.register("df", df)
         con.execute(
-            f"""
+            """
             CREATE TABLE t1 AS SELECT * FROM df
         """
         )
-        assert (
-            con.execute(
-                f"""
-            SELECT count(*) from t1
-        """
-            ).fetchall()
-            == [(3000000,)]
-        )
+        assert con.execute(
+            """         #            SELECT count(*) from t1         #        """
+        ).fetchall() == [(3000000,)]

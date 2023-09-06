@@ -21,10 +21,10 @@ if pr != "false":
 tag = os.getenv("TRAVIS_TAG", '')  # this env var is always present just not always used
 if tag == '':
     tag = 'main-builds'
-print("Running on tag %s" % tag)
+print(f"Running on tag {tag}")
 
 if tag == "main-builds" and os.getenv("TRAVIS_BRANCH", "") != "main":
-    print("Only running on main branch for %s tag. Exiting." % tag)
+    print(f"Only running on main branch for {tag} tag. Exiting.")
     exit(0)
 
 
@@ -35,7 +35,10 @@ if token == "":
 
 def gh_api(suburl, filename='', method='GET'):
     url = api_url + suburl
-    headers = {"Content-Type": "application/json", 'Authorization': 'token ' + token}
+    headers = {
+        "Content-Type": "application/json",
+        'Authorization': f'token {token}',
+    }
 
     body_data = b''
 
@@ -58,18 +61,15 @@ def gh_api(suburl, filename='', method='GET'):
     except urllib.error.HTTPError as e:
         raw_resp = e.read().decode()  # gah
 
-    if method != 'DELETE':
-        return json.loads(raw_resp)
-    else:
-        return {}
+    return json.loads(raw_resp) if method != 'DELETE' else {}
 
 
 # check if tag exists
-resp = gh_api('git/ref/tags/%s' % tag)
+resp = gh_api(f'git/ref/tags/{tag}')
 if 'object' not in resp or 'sha' not in resp['object']:  # or resp['object']['sha'] != sha
-    raise ValueError('tag %s not found' % tag)
+    raise ValueError(f'tag {tag} not found')
 
-resp = gh_api('releases/tags/%s' % tag)
+resp = gh_api(f'releases/tags/{tag}')
 if 'id' not in resp or 'upload_url' not in resp:
     raise ValueError('release does not exist for tag ' % tag)
 
@@ -79,7 +79,7 @@ if 'id' not in resp or 'upload_url' not in resp:
 # 	raise ValueError('release does not point to requested commit %s' % sha)
 
 # TODO this could be a paged response!
-assets = gh_api('releases/%s/assets' % resp['id'])
+assets = gh_api(f"releases/{resp['id']}/assets")
 
 upload_url = resp['upload_url'].split('{')[0]  # gah
 files = sys.argv[1:]
@@ -89,7 +89,7 @@ for filename in files:
         asset_filename = parts[0]
         paths = glob.glob(parts[1])
         if len(paths) != 1:
-            raise ValueError("Could not find file for pattern %s" % local_filename)
+            raise ValueError(f"Could not find file for pattern {local_filename}")
         local_filename = paths[0]
     else:
         asset_filename = os.path.basename(filename)
@@ -98,9 +98,9 @@ for filename in files:
     # delete if present
     for asset in assets:
         if asset['name'] == asset_filename:
-            gh_api('releases/assets/%s' % asset['id'], method='DELETE')
+            gh_api(f"releases/assets/{asset['id']}", method='DELETE')
 
-    resp = gh_api(upload_url + '?name=%s' % asset_filename, filename=local_filename)
+    resp = gh_api(f'{upload_url}?name={asset_filename}', filename=local_filename)
     if 'id' not in resp:
-        raise ValueError('upload failed :/ ' + str(resp))
-    print("%s -> %s" % (local_filename, resp['browser_download_url']))
+        raise ValueError(f'upload failed :/ {str(resp)}')
+    print(f"{local_filename} -> {resp['browser_download_url']}")

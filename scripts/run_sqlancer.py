@@ -45,12 +45,9 @@ git_hash = fuzzer_helper.get_github_hash()
 
 targetdir = os.path.join(sqlancer_dir, 'target')
 filenames = os.listdir(targetdir)
-found_filename = ""
-for fname in filenames:
-    if 'sqlancer-' in fname.lower():
-        found_filename = fname
-        break
-
+found_filename = next(
+    (fname for fname in filenames if 'sqlancer-' in fname.lower()), ""
+)
 if not found_filename:
     print("FAILED TO RUN SQLANCER")
     print("Could not find target file sqlancer/target/sqlancer-*.jar")
@@ -61,10 +58,7 @@ if persistent:
     command_prefix += ['-Dduckdb.database.file=/tmp/lancer_duckdb_db']
 command_prefix += ['-jar', os.path.join(targetdir, found_filename)]
 
-seed_text = ''
-if seed is not None:
-    seed_text = f'--random-seed {seed}'
-
+seed_text = f'--random-seed {seed}' if seed is not None else ''
 base_cmd = f'--num-queries {num_queries} --num-threads {threads} {seed_text} --log-each-select=true --timeout-seconds {timeout} duckdb'
 command = [x for x in base_cmd.split(' ') if len(x) > 0]
 
@@ -78,11 +72,11 @@ subprocess.wait()
 
 if subprocess.returncode == 0:
     print('--------------------- SQLANCER SUCCESS ----------------------')
-    print('SQLANCER EXITED WITH CODE ' + str(subprocess.returncode))
+    print(f'SQLANCER EXITED WITH CODE {str(subprocess.returncode)}')
     exit(0)
 
 print('--------------------- SQLANCER FAILURE ----------------------')
-print('SQLANCER EXITED WITH CODE ' + str(subprocess.returncode))
+print(f'SQLANCER EXITED WITH CODE {str(subprocess.returncode)}')
 print('--------------------- SQLANCER ERROR LOG ----------------------')
 print(err.decode('utf8', 'ignore'))
 print('--------------------- SQLancer Logs ----------------------')

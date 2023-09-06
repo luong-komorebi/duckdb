@@ -42,7 +42,9 @@ def sanitize_string(text):
 new_text = header
 
 type_entries = []
-json_path = normalize_path_separators(f'src/include/duckdb/catalog/default/builtin_types/types.json')
+json_path = normalize_path_separators(
+    'src/include/duckdb/catalog/default/builtin_types/types.json'
+)
 with open(json_path, 'r') as f:
     parsed_json = json.load(f)
 

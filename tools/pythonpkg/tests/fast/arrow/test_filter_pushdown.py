@@ -15,8 +15,12 @@ duckdb_conn = duckdb.connect()
 
 
 def numeric_operators(data_type, tbl_name):
-    duckdb_conn.execute("CREATE TABLE " + tbl_name + " (a " + data_type + ", b " + data_type + ", c " + data_type + ")")
-    duckdb_conn.execute("INSERT INTO  " + tbl_name + " VALUES (1,1,1),(10,10,10),(100,10,100),(NULL,NULL,NULL)")
+    duckdb_conn.execute(
+        f"CREATE TABLE {tbl_name} (a {data_type}, b {data_type}, c {data_type})"
+    )
+    duckdb_conn.execute(
+        f"INSERT INTO  {tbl_name} VALUES (1,1,1),(10,10,10),(100,10,100),(NULL,NULL,NULL)"
+    )
     duck_tbl = duckdb_conn.table(tbl_name)
     arrow_table = duck_tbl.arrow()
     print(arrow_table)
@@ -53,41 +57,47 @@ def numeric_check_or_pushdown(tbl_name):
     duck_tbl = duckdb_conn.table(tbl_name)
     arrow_table = duck_tbl.arrow()
 
-    arrow_tbl_name = "testarrow_" + tbl_name
+    arrow_tbl_name = f"testarrow_{tbl_name}"
     duckdb_conn.register(arrow_tbl_name, arrow_table)
 
     # Multiple column in the root OR node, don't push down
     query_res = duckdb_conn.execute(
-        "EXPLAIN SELECT * FROM " + arrow_tbl_name + " WHERE a=1 OR b=2 AND (a>3 OR b<5)"
+        f"EXPLAIN SELECT * FROM {arrow_tbl_name} WHERE a=1 OR b=2 AND (a>3 OR b<5)"
     ).fetchall()
     match = re.search(".*ARROW_SCAN.*Filters:.*", query_res[0][1])
     assert not match
 
     # Single column in the root OR node
-    query_res = duckdb_conn.execute("EXPLAIN SELECT * FROM " + arrow_tbl_name + " WHERE a=1 OR a=10").fetchall()
+    query_res = duckdb_conn.execute(
+        f"EXPLAIN SELECT * FROM {arrow_tbl_name} WHERE a=1 OR a=10"
+    ).fetchall()
     match = re.search(".*ARROW_SCAN.*Filters: a=1 OR a=10.*|$", query_res[0][1])
     assert match
 
     # Single column + root OR node with AND
     query_res = duckdb_conn.execute(
-        "EXPLAIN SELECT * FROM " + arrow_tbl_name + " WHERE a=1 OR (a>3 AND a<5)"
+        f"EXPLAIN SELECT * FROM {arrow_tbl_name} WHERE a=1 OR (a>3 AND a<5)"
     ).fetchall()
     match = re.search(".*ARROW_SCAN.*Filters: a=1 OR a>3 AND a<5.*|$", query_res[0][1])
     assert match
 
     # Single column multiple ORs
-    query_res = duckdb_conn.execute("EXPLAIN SELECT * FROM " + arrow_tbl_name + " WHERE a=1 OR a>3 OR a<5").fetchall()
+    query_res = duckdb_conn.execute(
+        f"EXPLAIN SELECT * FROM {arrow_tbl_name} WHERE a=1 OR a>3 OR a<5"
+    ).fetchall()
     match = re.search(".*ARROW_SCAN.*Filters: a=1 OR a>3 OR a<5.*|$", query_res[0][1])
     assert match
 
     # Testing not equal
-    query_res = duckdb_conn.execute("EXPLAIN SELECT * FROM " + arrow_tbl_name + " WHERE a!=1 OR a>3 OR a<2").fetchall()
+    query_res = duckdb_conn.execute(
+        f"EXPLAIN SELECT * FROM {arrow_tbl_name} WHERE a!=1 OR a>3 OR a<2"
+    ).fetchall()
     match = re.search(".*ARROW_SCAN.*Filters: a!=1 OR a>3 OR a<2.*|$", query_res[0][1])
     assert match
 
     # Multiple OR filters connected with ANDs
     query_res = duckdb_conn.execute(
-        "EXPLAIN SELECT * FROM " + arrow_tbl_name + " WHERE (a<2 OR a>3) AND (a=1 OR a=4) AND (b=1 OR b<5)"
+        f"EXPLAIN SELECT * FROM {arrow_tbl_name} WHERE (a<2 OR a>3) AND (a=1 OR a=4) AND (b=1 OR b<5)"
     ).fetchall()
     match = re.search(".*ARROW_SCAN.*Filters: a<2 OR a>3 AND a=1|\n.*OR a=4.*\n.*b=2 OR b<5.*|$", query_res[0][1])
     assert match
@@ -101,24 +111,30 @@ def string_check_or_pushdown(tbl_name):
     duckdb_conn.register(arrow_tbl_name, arrow_table)
 
     # Check string zonemap
-    query_res = duckdb_conn.execute("EXPLAIN SELECT * FROM " + arrow_tbl_name + " WHERE a>='1' OR a<='10'").fetchall()
+    query_res = duckdb_conn.execute(
+        f"EXPLAIN SELECT * FROM {arrow_tbl_name} WHERE a>='1' OR a<='10'"
+    ).fetchall()
     match = re.search(".*ARROW_SCAN.*Filters: a>=1 OR a<=10.*|$", query_res[0][1])
     assert match
 
     # No support for OR with is null
-    query_res = duckdb_conn.execute("EXPLAIN SELECT * FROM " + arrow_tbl_name + " WHERE a IS NULL or a='1'").fetchall()
+    query_res = duckdb_conn.execute(
+        f"EXPLAIN SELECT * FROM {arrow_tbl_name} WHERE a IS NULL or a='1'"
+    ).fetchall()
     match = re.search(".*ARROW_SCAN.*Filters:.*", query_res[0][1])
     assert not match
 
     # No support for OR with is not null
     query_res = duckdb_conn.execute(
-        "EXPLAIN SELECT * FROM " + arrow_tbl_name + " WHERE a IS NOT NULL OR a='1'"
+        f"EXPLAIN SELECT * FROM {arrow_tbl_name} WHERE a IS NOT NULL OR a='1'"
     ).fetchall()
     match = re.search(".*ARROW_SCAN.*Filters:.*", query_res[0][1])
     assert not match
 
     # OR with the like operator
-    query_res = duckdb_conn.execute("EXPLAIN SELECT * FROM " + arrow_tbl_name + " WHERE a=1 OR a LIKE '10%'").fetchall()
+    query_res = duckdb_conn.execute(
+        f"EXPLAIN SELECT * FROM {arrow_tbl_name} WHERE a=1 OR a LIKE '10%'"
+    ).fetchall()
     match = re.search(".*ARROW_SCAN.*Filters:.*", query_res[0][1])
     assert not match
 
@@ -139,7 +155,7 @@ class TestArrowFilterPushdown(object):
             'HUGEINT',
         ]
         for data_type in numeric_types:
-            tbl_name = "test_" + data_type
+            tbl_name = f"test_{data_type}"
             numeric_operators(data_type, tbl_name)
             numeric_check_or_pushdown(tbl_name)
 
@@ -150,8 +166,7 @@ class TestArrowFilterPushdown(object):
             'DECIMAL(18,4)': 'test_decimal_18_4',
             'DECIMAL(30,12)': 'test_decimal_30_12',
         }
-        for data_type in numeric_types:
-            tbl_name = numeric_types[data_type]
+        for data_type, tbl_name in numeric_types.items():
             numeric_operators(data_type, tbl_name)
             numeric_check_or_pushdown(tbl_name)
 

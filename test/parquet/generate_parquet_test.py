@@ -33,16 +33,20 @@ def get_files():
     os.chdir(path)
     path = os.path.join('data', 'parquet-testing')
     for root, dirs, files in os.walk(path):
-        for file in files:
-            if file.endswith(".parquet"):
-                files_path.append(os.path.join(root, file))
+        files_path.extend(
+            os.path.join(root, file)
+            for file in files
+            if file.endswith(".parquet")
+        )
     return files_path
 
 
 def get_duckdb_answer(file_path):
     answer = []
     try:
-        answer = duckdb.query("SELECT * FROM parquet_scan('" + file_path + "') limit 50").fetchall()
+        answer = duckdb.query(
+            f"SELECT * FROM parquet_scan('{file_path}') limit 50"
+        ).fetchall()
     except Exception as e:
         print(e)
         answer = 'fail'
@@ -54,8 +58,7 @@ def get_arrow_answer(file_path):
     try:
         arrow = pyarrow.parquet.read_table(file_path)
         duck_rel = duckdb.from_arrow(arrow).limit(50)
-        answer = duck_rel.fetchall()
-        return answer
+        return duck_rel.fetchall()
     except:
         return 'fail'
 
@@ -65,9 +68,7 @@ def check_result(duckdb_result, arrow_result):
         return 'skip'
     if duckdb_result == 'fail':
         return 'fail'
-    if duckdb_result != arrow_result:
-        return 'fail'
-    return 'pass'
+    return 'fail' if duckdb_result != arrow_result else 'pass'
 
 
 def sanitize_string(s):
@@ -93,8 +94,8 @@ def result_to_string(arrow_result):
 
 def generate_parquet_test_body(result, arrow_result, file_path):
     columns = 'I' * len(arrow_result[0])
-    test_body = "query " + columns + "\n"
-    test_body += "SELECT * FROM parquet_scan('" + file_path + "') limit 50 \n"
+    test_body = f"query {columns}" + "\n"
+    test_body += f"SELECT * FROM parquet_scan('{file_path}" + "') limit 50 \n"
     test_body += "----\n"
     test_body += result_to_string(arrow_result)
     return test_body
@@ -125,10 +126,6 @@ def generate_body(f):
             f.write(test_body)
 
 
-f = open("test_parquet_reader.test", "w")
-
-generate_header(f)
-generate_body(f)
-
-
-f.close()
+with open("test_parquet_reader.test", "w") as f:
+    generate_header(f)
+    generate_body(f)

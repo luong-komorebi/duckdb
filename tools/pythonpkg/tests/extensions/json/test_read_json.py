@@ -9,8 +9,7 @@ import re
 def TestFile(name):
     import os
 
-    filename = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data', name)
-    return filename
+    return os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data', name)
 
 
 class TestReadJSON(object):

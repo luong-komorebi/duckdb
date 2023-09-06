@@ -33,14 +33,18 @@ if len(basenames) != len(basenames_set):
 
 git_hash = git_rev_hash()
 
-folder = 'rev/%s/%s' % (git_hash, prefix)
+folder = f'rev/{git_hash}/{prefix}'
 
 
 def curlcmd(cmd, path):
     p = subprocess.Popen(
-        ['curl', '--retry', '10']
-        + cmd
-        + ['http://duckdb:%s@dav10635776.mywebdav.de/duckdb-download/%s' % (secret_key, path)],
+        (
+            ['curl', '--retry', '10']
+            + cmd
+            + [
+                f'http://duckdb:{secret_key}@dav10635776.mywebdav.de/duckdb-download/{path}'
+            ]
+        ),
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
     )
@@ -55,11 +59,11 @@ def curlcmd(cmd, path):
 # create dirs, no recursive create supported by webdav
 f_p = ''
 for p in folder.split('/'):
-    f_p += p + '/'
+    f_p += f'{p}/'
     curlcmd(['-X', 'MKCOL'], f_p)
 
 for f in files:
     base = os.path.basename(f)
-    key = '%s/%s' % (folder, base)
+    key = f'{folder}/{base}'
     print("%s\t->\thttps://download.duckdb.org/%s " % (f, key))
     curlcmd(['-T', f], key)

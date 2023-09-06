@@ -15,11 +15,7 @@ if len(sys.argv) < 2:
     print("Expected usage: python3 scripts/run_test_list.py build/debug/test/unittest [--no-exit]")
     exit(1)
 unittest_program = sys.argv[1]
-extra_args = []
-if len(sys.argv) > 2:
-    extra_args = [sys.argv[2]]
-
-
+extra_args = [sys.argv[2]] if len(sys.argv) > 2 else []
 test_cases = []
 for line in sys.stdin:
     if len(line.strip()) == 0:
@@ -30,7 +26,9 @@ for line in sys.stdin:
 test_count = len(test_cases)
 return_code = 0
 for test_number in range(test_count):
-    sys.stdout.write("[" + str(test_number) + "/" + str(test_count) + "]: " + test_cases[test_number])
+    sys.stdout.write(
+        f"[{str(test_number)}/{test_count}]: {test_cases[test_number]}"
+    )
     sys.stdout.flush()
     res = subprocess.run([unittest_program, test_cases[test_number]], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout = res.stdout.decode('utf8')

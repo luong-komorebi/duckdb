@@ -14,11 +14,11 @@ SELECT * FROM reduce_sql_statement('${QUERY}');
 
 def sanitize_error(err):
     err = re.sub(r'Error: near line \d+: ', '', err)
-    err = err.replace(os.getcwd() + '/', '')
+    err = err.replace(f'{os.getcwd()}/', '')
     err = err.replace(os.getcwd(), '')
     if 'AddressSanitizer' in err:
         match = re.search(r'[ \t]+[#]0 ([A-Za-z0-9]+) ([^\n]+)', err).groups()[1]
-        err = 'AddressSanitizer error ' + match
+        err = f'AddressSanitizer error {match}'
     return err
 
 
@@ -38,9 +38,9 @@ def get_reduced_sql(shell, sql_query):
         print(stdout)
         print(stderr)
         raise Exception("Failed to reduce query")
-    reduce_candidates = []
-    for line in stdout.split('\n'):
-        reduce_candidates.append(line.strip('"').replace('""', '"'))
+    reduce_candidates = [
+        line.strip('"').replace('""', '"') for line in stdout.split('\n')
+    ]
     return reduce_candidates[1:]
 
 
@@ -73,9 +73,12 @@ def reduce(sql_query, data_load, shell, error_msg, max_time_seconds=300):
 
 def is_ddl_query(query):
     query = query.lower()
-    if 'create' in query or 'insert' in query or 'update' in query or 'delete' in query:
-        return True
-    return False
+    return (
+        'create' in query
+        or 'insert' in query
+        or 'update' in query
+        or 'delete' in query
+    )
 
 
 def initial_cleanup(query_log):

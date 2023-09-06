@@ -20,7 +20,9 @@ for arg in sys.argv[1:]:
     elif arg.startswith("--namespace"):
         namespace = arg.split("=")[1]
     else:
-        raise Exception("Unrecognized argument: " + arg + ", expected --flex, --custom_dir_prefix, --namespace")
+        raise Exception(
+            f"Unrecognized argument: {arg}, expected --flex, --custom_dir_prefix, --namespace"
+        )
 
 flex_file_path = os.path.join(pg_path, 'scan.l')
 target_file = os.path.join(pg_path, 'src_backend_parser_scan.cpp')

@@ -88,7 +88,12 @@ def get_libraries(binary_dir, libraries, extensions):
         duckdb_lib_name = 'duckdb'
     find_library(os.path.join(binary_dir, 'src'), duckdb_lib_name, result_libs, True)
     for ext in extensions:
-        find_library(os.path.join(binary_dir, 'extension', ext), ext + '_extension', result_libs, True)
+        find_library(
+            os.path.join(binary_dir, 'extension', ext),
+            f'{ext}_extension',
+            result_libs,
+            True,
+        )
 
     for libname in libraries:
         find_library(binary_dir, libname, result_libs)
@@ -99,17 +104,18 @@ def get_libraries(binary_dir, libraries, extensions):
 def includes(extensions):
     scripts_dir = os.path.dirname(os.path.abspath(__file__))
     # add includes for duckdb and extensions
-    includes = []
-    includes.append(os.path.join(scripts_dir, '..', 'src', 'include'))
+    includes = [os.path.join(scripts_dir, '..', 'src', 'include')]
     includes.append(os.path.join(scripts_dir, '..'))
     includes.append(os.path.join(scripts_dir, '..', 'third_party', 'utf8proc', 'include'))
-    for ext in extensions:
-        includes.append(os.path.join(scripts_dir, '..', 'extension', ext, 'include'))
+    includes.extend(
+        os.path.join(scripts_dir, '..', 'extension', ext, 'include')
+        for ext in extensions
+    )
     return includes
 
 
 def include_flags(extensions):
-    return ' ' + ' '.join(['-I' + x for x in includes(extensions)])
+    return ' ' + ' '.join([f'-I{x}' for x in includes(extensions)])
 
 
 def convert_backslashes(x):
@@ -146,10 +152,9 @@ def git_dev_version():
         if int(dev_version) == 0:
             # directly on a tag: emit the regular version
             return '.'.join(version_splits)
-        else:
-            # not on a tag: increment the version by one and add a -devX suffix
-            version_splits[2] = str(int(version_splits[2]) + 1)
-            return '.'.join(version_splits) + "-dev" + dev_version
+        # not on a tag: increment the version by one and add a -devX suffix
+        version_splits[2] = str(int(version_splits[2]) + 1)
+        return '.'.join(version_splits) + "-dev" + dev_version
     except:
         return "0.0.0"
 
@@ -160,7 +165,7 @@ def include_package(pkg_name, pkg_dir, include_files, include_list, source_list)
     original_path = sys.path
     # append the directory
     sys.path.append(pkg_dir)
-    ext_pkg = __import__(pkg_name + '_config')
+    ext_pkg = __import__(f'{pkg_name}_config')
 
     ext_include_dirs = ext_pkg.include_directories
     ext_source_files = ext_pkg.source_files
@@ -268,7 +273,7 @@ def build_package(target_dir, extensions, linenumbers=False, unity_count=32, fol
             files_per_directory[dirname].append(source)
 
         new_source_files = []
-        for dirname in files_per_directory.keys():
+        for dirname in files_per_directory:
             current_files = files_per_directory[dirname]
             cmake_file = os.path.join(dirname, 'CMakeLists.txt')
             unity_build = False

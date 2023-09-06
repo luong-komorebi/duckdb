@@ -6,11 +6,9 @@ import numpy as np
 
 def compare_results(query, list_values=[]):
     df_duck = duckdb.query(query).df()
-    counter = 0
     duck_values = df_duck['a']
-    for duck_value in duck_values:
+    for counter, duck_value in enumerate(duck_values):
         assert duck_value == list_values[counter]
-        counter += 1
 
 
 class TestFetchNested(object):

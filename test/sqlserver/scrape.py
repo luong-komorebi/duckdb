@@ -36,10 +36,7 @@ def transform_result_set(tblstr):
     print("REQUIRE(result->ColumnCount() == %d);" % cols)
     lineiterator = iter(tblstr.splitlines())
     in_data = False
-    result = []
-    for c in range(0, cols):
-        result.append([])
-
+    result = [[] for _ in range(0, cols)]
     for line in lineiterator:
         if '---' in line:
             in_data = True
@@ -75,9 +72,9 @@ def transform_result_set(tblstr):
                 needs_quotes = False
 
             if needs_quotes:
-                f = '"%s"' % f
+                f = f'"{f}"'
             result[c].append(f)
-        # print()
+            # print()
 
     for c in range(0, cols):
         print('REQUIRE(CHECK_COLUMN(result, %d, {%s}));' % (c, ','.join(result[c])))

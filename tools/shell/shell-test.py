@@ -30,10 +30,7 @@ def test(cmd, out=None, err=None, extra_commands=None, input_file=None, output_f
         input_data = open(input_file, 'rb').read()
     else:
         input_data = bytearray(cmd, 'utf8')
-    output_pipe = subprocess.PIPE
-    if output_file:
-        output_pipe = open(output_file, 'w+')
-
+    output_pipe = open(output_file, 'w+') if output_file else subprocess.PIPE
     res = subprocess.run(command, input=input_data, stdout=output_pipe, stderr=subprocess.PIPE)
     if output_file:
         stdout = open(output_file, 'r').read()
@@ -119,7 +116,7 @@ SELECT CAST(i AS INTEGER) FROM a;
 
 test('.auth ON', err='sqlite3_set_authorizer')
 test('.auth OFF', err='sqlite3_set_authorizer')
-test('.backup %s' % tf(), err='sqlite3_backup_init')
+test(f'.backup {tf()}', err='sqlite3_backup_init')
 
 # test newline in value
 test(
@@ -225,7 +222,7 @@ test("select regexp_matches('abc','abc')", out='true')
 
 test('.help', 'Show help text for PATTERN')
 
-test('.load %s' % tf(), err="Error")
+test(f'.load {tf()}', err="Error")
 
 # error in streaming result
 test(
@@ -290,7 +287,7 @@ test('.selftest', err='sqlite3_table_column_metadata')
 
 scriptfile = tf()
 print("select 42", file=open(scriptfile, 'w'))
-test('.read %s' % scriptfile, out='42')
+test(f'.read {scriptfile}', out='42')
 
 
 test('.show', out='rowseparator')
@@ -306,8 +303,8 @@ test('.limit length 42', err='sqlite3_limit')
 test('.timeout', err='sqlite3_busy_timeout')
 
 
-test('.save %s' % tf(), err='sqlite3_backup_init')
-test('.restore %s' % tf(), err='sqlite3_backup_init')
+test(f'.save {tf()}', err='sqlite3_backup_init')
+test(f'.restore {tf()}', err='sqlite3_backup_init')
 
 
 # don't crash plz
@@ -1177,7 +1174,7 @@ select * from range(4);
     out='Row 1',
 )
 
-columns = ','.join(["'MyValue" + str(x) + "'" for x in range(100)])
+columns = ','.join([f"'MyValue{str(x)}'" for x in range(100)])
 test(
     f'''
 .col

@@ -8,9 +8,7 @@ from conftest import NumpyPandas, ArrowPandas
 
 
 def run_parallel_queries(main_table, left_join_table, expected_df, pandas, iteration_count=5):
-    for i in range(0, iteration_count):
-        output_df = None
-        sql = """
+    sql = """
         select
             main_table.*
             ,t1.*
@@ -21,6 +19,8 @@ def run_parallel_queries(main_table, left_join_table, expected_df, pandas, itera
         left join left_join_table t2
             on main_table.join_column = t2.join_column
         """
+    for _ in range(0, iteration_count):
+        output_df = None
         try:
             duckdb_conn = duckdb.connect()
             duckdb_conn.execute("PRAGMA threads=4")

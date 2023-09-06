@@ -1,13 +1,6 @@
-_exported_symbols = []
-
 # Modules
 import duckdb.functional as functional
 import duckdb.typing as typing
-_exported_symbols.extend([
-    "typing",
-    "functional"
-])
-
 # Classes
 from .duckdb import (
     DuckDBPyRelation,
@@ -15,13 +8,6 @@ from .duckdb import (
     ExplainType,
     PythonExceptionHandling
 )
-_exported_symbols.extend([
-    "DuckDBPyRelation",
-    "DuckDBPyConnection",
-    "ExplainType",
-    "PythonExceptionHandling"
-])
-
 # Enums
 from .duckdb import (
     ANALYZE,
@@ -29,13 +15,6 @@ from .duckdb import (
     RETURN_NULL,
     STANDARD
 )
-_exported_symbols.extend([
-    "ANALYZE",
-    "DEFAULT",
-    "RETURN_NULL",
-    "STANDARD"
-])
-
 # Type-creation methods
 from .duckdb import (
     struct_type,
@@ -43,13 +22,6 @@ from .duckdb import (
     array_type,
     decimal_type
 )
-_exported_symbols.extend([
-    "struct_type",
-    "list_type",
-    "array_type",
-    "decimal_type"
-])
-
 # read-only properties
 from .duckdb import (
     __standard_vector_size__,
@@ -69,25 +41,6 @@ from .duckdb import (
     token_type,
     tokenize
 )
-_exported_symbols.extend([
-    "__standard_vector_size__",
-    "__interactive__",
-    "__jupyter__",
-    "__version__",
-    "apilevel",
-    "comment",
-    "default_connection",
-    "identifier",
-    "keyword",
-    "numeric_const",
-    "operator",
-    "paramstyle",
-    "string_const",
-    "threadsafety",
-    "token_type",
-    "tokenize"
-])
-
 from .duckdb import (
     filter,
     project,
@@ -100,19 +53,6 @@ from .duckdb import (
     connect,
     write_csv
 )
-_exported_symbols.extend([
-    "filter",
-    "project",
-    "aggregate",
-    "distinct",
-    "limit",
-    "query_df",
-    "order",
-    "alias",
-    "connect",
-    "write_csv"
-])
-
 # TODO: might be worth seeing if these methods can be replaced with a pure-python solution
 # Connection methods
 from .duckdb import (
@@ -183,7 +123,83 @@ from .duckdb import (
     values,
     view
 )
-_exported_symbols.extend([
+# Exceptions
+from .duckdb import (
+    Error,
+    DataError,
+    CastException,
+    ConversionException,
+    OutOfRangeException,
+    TypeMismatchException,
+    ValueOutOfRangeException,
+    FatalException,
+    IntegrityError,
+    ConstraintException,
+    InternalError,
+    InternalException,
+    InterruptException,
+    NotSupportedError,
+    NotImplementedException,
+    OperationalError,
+    ConnectionException,
+    IOException,
+    HTTPException,
+    OutOfMemoryException,
+    SerializationException,
+    TransactionException,
+    PermissionException,
+    ProgrammingError,
+    BinderException,
+    CatalogException,
+    InvalidInputException,
+    InvalidTypeException,
+    ParserException,
+    SyntaxException,
+    SequenceException,
+    StandardException,
+    Warning
+)
+_exported_symbols = [
+    "typing",
+    "functional",
+    "DuckDBPyRelation",
+    "DuckDBPyConnection",
+    "ExplainType",
+    "PythonExceptionHandling",
+    "ANALYZE",
+    "DEFAULT",
+    "RETURN_NULL",
+    "STANDARD",
+    "struct_type",
+    "list_type",
+    "array_type",
+    "decimal_type",
+    "__standard_vector_size__",
+    "__interactive__",
+    "__jupyter__",
+    "__version__",
+    "apilevel",
+    "comment",
+    "default_connection",
+    "identifier",
+    "keyword",
+    "numeric_const",
+    "operator",
+    "paramstyle",
+    "string_const",
+    "threadsafety",
+    "token_type",
+    "tokenize",
+    "filter",
+    "project",
+    "aggregate",
+    "distinct",
+    "limit",
+    "query_df",
+    "order",
+    "alias",
+    "connect",
+    "write_csv",
     "append",
     "array_type",
     "arrow",
@@ -249,46 +265,7 @@ _exported_symbols.extend([
     "unregister",
     "unregister_filesystem",
     "values",
-    "view"
-])
-
-# Exceptions
-from .duckdb import (
-    Error,
-    DataError,
-    CastException,
-    ConversionException,
-    OutOfRangeException,
-    TypeMismatchException,
-    ValueOutOfRangeException,
-    FatalException,
-    IntegrityError,
-    ConstraintException,
-    InternalError,
-    InternalException,
-    InterruptException,
-    NotSupportedError,
-    NotImplementedException,
-    OperationalError,
-    ConnectionException,
-    IOException,
-    HTTPException,
-    OutOfMemoryException,
-    SerializationException,
-    TransactionException,
-    PermissionException,
-    ProgrammingError,
-    BinderException,
-    CatalogException,
-    InvalidInputException,
-    InvalidTypeException,
-    ParserException,
-    SyntaxException,
-    SequenceException,
-    StandardException,
-    Warning
-)
-_exported_symbols.extend([
+    "view",
     "Error",
     "DataError",
     "CastException",
@@ -321,7 +298,6 @@ _exported_symbols.extend([
     "SyntaxException",
     "SequenceException",
     "StandardException",
-    "Warning"
-])
-
+    "Warning",
+]
 __all__ = _exported_symbols

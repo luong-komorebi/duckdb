@@ -30,15 +30,15 @@ class Command(object):
 
         thread.join(timeout)
         if thread.is_alive():
-            print('Terminating process: process exceeded timeout of ' + str(timeout) + ' seconds')
+            print(
+                f'Terminating process: process exceeded timeout of {str(timeout)} seconds'
+            )
             self.process.terminate()
             thread.join()
-        if self.process is None:
-            return 1
-        return self.process.returncode
+        return 1 if self.process is None else self.process.returncode
 
 
-for i in range(retries):
+for _ in range(retries):
     print("Attempting to run command \"" + ' '.join(cmd) + '"')
     command = Command(cmd)
     returncode = command.run(timeout)

@@ -48,9 +48,7 @@ for root, dirs, files in os.walk(os.path.join("..", "src")):
 
 
 def remove_prefix(str, prefix):
-    if str.startswith(prefix):
-        return str[len(prefix) :]
-    return str
+    return str[len(prefix) :] if str.startswith(prefix) else str
 
 
 # get all the enum classes
@@ -103,7 +101,7 @@ for hpp_file in hpp_files:
                 else:
                     enum_members.append((key, strings))
 
-            if not file_path in enum_path_set:
+            if file_path not in enum_path_set:
                 enum_path_set.add(file_path)
                 enum_paths.append(file_path)
 

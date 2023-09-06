@@ -59,7 +59,7 @@ class SparkSession:
         def verify_tuple_integrity(tuples):
             if len(tuples) <= 1:
                 return
-            assert all([len(x) == len(tuples[0]) for x in tuples[1:]])
+            assert all(len(x) == len(tuples[0]) for x in tuples[1:])
 
         if not isinstance(data, list):
             data = list(data)
@@ -123,7 +123,11 @@ class SparkSession:
         # Then check if 'data' is None or []
         # Finally check if a schema was provided
         is_empty = False
-        if (not has_pandas or (has_pandas and not isinstance(data, pandas.DataFrame))) and not data and names:
+        if (
+            (not has_pandas or not isinstance(data, pandas.DataFrame))
+            and not data
+            and names
+        ):
             # Create NULLs for every type in our the dataframe
             is_empty = True
             data = [tuple(None for _ in names)]

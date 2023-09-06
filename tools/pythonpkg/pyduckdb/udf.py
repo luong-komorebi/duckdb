@@ -9,11 +9,8 @@ def vectorized(func):
     # Construct the annotations:
     import pyarrow as pa
 
-    new_annotations = {}
     sig = signature(func)
     sig.parameters
-    for param in sig.parameters:
-        new_annotations[param] = pa.lib.ChunkedArray
-
+    new_annotations = {param: pa.lib.ChunkedArray for param in sig.parameters}
     new_func.__annotations__ = new_annotations
     return new_func

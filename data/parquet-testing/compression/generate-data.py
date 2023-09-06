@@ -39,10 +39,8 @@ def build_table():
     N = 30  # column count
     p = .2  # NULL probability
 
-    columns = {}
+    columns = {"plain": pa.array(np.arange(N))}
 
-    # Integer columns, no nesting, no NULL, no repetition
-    columns["plain"] = pa.array(np.arange(N))
     columns["plain_random"] = pa.array(rng.choice(N, N))
 
     # Mixed dtype struct column, NULLs exist at all levels

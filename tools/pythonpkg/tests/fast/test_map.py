@@ -20,10 +20,7 @@ class TestMap(object):
 
         # column count differs from bind
         def evil1(df):
-            if len(df) == 0:
-                return df['col0'].to_frame()
-            else:
-                return df
+            return df['col0'].to_frame() if len(df) == 0 else df
 
         # column type differs from bind
         def evil2(df):

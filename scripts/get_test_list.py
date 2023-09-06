@@ -32,7 +32,7 @@ proc = subprocess.Popen([unittest_program, '-l'] + extra_args, stdout=subprocess
 stdout = proc.stdout.read().decode('utf8')
 stderr = proc.stderr.read().decode('utf8')
 if proc.returncode is not None and proc.returncode != 0:
-    print("Failed to run program " + unittest_program)
+    print(f"Failed to run program {unittest_program}")
     print(proc.returncode)
     print(stdout)
     print(stderr)

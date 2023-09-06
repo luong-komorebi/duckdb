@@ -40,7 +40,7 @@ def cleanup_line(line):
 
 partial_coverage_dict = {}
 with open(args.uncovered_files, 'r') as f:
-    for line in f.readlines():
+    for line in f:
         splits = line.split('\t')
         partial_coverage_dict[splits[0]] = int(splits[1].strip())
 
@@ -55,10 +55,10 @@ allowed_difference = 1
 def check_file(path, partial_coverage_dict):
     global any_failed
     global total_difference
-    if not '.cpp' in path and not '.hpp' in path:
+    if '.cpp' not in path and '.hpp' not in path:
         # files are named [path].[ch]pp
         return
-    if not '.html' in path:
+    if '.html' not in path:
         return
     with open(path, 'r') as f:
         text = f.read()

@@ -23,7 +23,7 @@ class TestArrowReplacementScan(object):
 
         con = duckdb.connect()
 
-        for i in range(5):
+        for _ in range(5):
             assert con.execute("select count(*) from userdata_parquet_table").fetchone() == (1000,)
             assert con.execute("select count(*) from df").fetchone() == (1000,)
 

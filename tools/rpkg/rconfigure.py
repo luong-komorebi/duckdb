@@ -8,7 +8,7 @@ extensions = ['parquet']
 
 # check if there are any additional extensions being requested
 if 'DUCKDB_R_EXTENSIONS' in os.environ:
-    extensions = extensions + os.environ['DUCKDB_R_EXTENSIONS'].split(",")
+    extensions += os.environ['DUCKDB_R_EXTENSIONS'].split(",")
 
 unity_build = 20
 if 'DUCKDB_BUILD_UNITY' in os.environ:
@@ -37,17 +37,14 @@ def open_utf8(fpath, flags):
 extension_list = ""
 
 for ext in extensions:
-    extension_list += ' -DDUCKDB_EXTENSION_{}_LINKED'.format(ext.upper())
+    extension_list += f' -DDUCKDB_EXTENSION_{ext.upper()}_LINKED'
     extension_list += " -DDUCKDB_BUILD_LIBRARY"
 
 libraries = []
 if platform.system() == 'Windows':
     libraries += ['ws2_32']
 
-link_flags = ''
-for libname in libraries:
-    link_flags += ' -l' + libname
-
+link_flags = ''.join(f' -l{libname}' for libname in libraries)
 # check if we are doing a build from an existing DuckDB installation
 if 'DUCKDB_R_BINDIR' in os.environ and 'DUCKDB_R_CFLAGS' in os.environ and 'DUCKDB_R_LIBS' in os.environ:
     existing_duckdb_dir = os.environ['DUCKDB_R_BINDIR']
@@ -68,9 +65,9 @@ if 'DUCKDB_R_BINDIR' in os.environ and 'DUCKDB_R_CFLAGS' in os.environ and 'DUCK
         libdir = rlib[0]
         libname = rlib[1]
         if libdir != None:
-            link_flags += ' -L' + libdir
+            link_flags += f' -L{libdir}'
         if libname != None:
-            link_flags += ' -l' + libname
+            link_flags += f' -l{libname}'
 
     text = text.replace('{{ SOURCES }}', '')
     text = text.replace('{{ INCLUDES }}', compile_flags.strip())
@@ -101,7 +98,7 @@ include_list = ' '.join(['-I' + 'duckdb/' + x for x in include_list])
 include_list += ' -I' + os.path.join('..', 'inst', 'include')
 include_list += ' -Iduckdb'
 include_list += extension_list
-include_list += ' ' + debug_move_flag
+include_list += f' {debug_move_flag}'
 
 # add -Werror if enabled
 if 'TREAT_WARNINGS_AS_ERRORS' in os.environ:
@@ -113,7 +110,7 @@ with open_utf8(os.path.join('src', 'Makevars.in'), 'r') as f:
 
 text = text.replace('{{ SOURCES }}', object_list)
 text = text.replace('{{ INCLUDES }}', include_list)
-if len(libraries) == 0:
+if not libraries:
     text = text.replace('PKG_LIBS={{ LINK_FLAGS }}', '')
 else:
     text = text.replace('{{ LINK_FLAGS }}', link_flags.strip())

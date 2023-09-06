@@ -18,8 +18,8 @@ class Test2426(object):
         con.execute("Create Table test (a integer)")
 
         for i in range(1024):
-            for j in range(2):
-                con.execute("Insert Into test values ('" + str(i) + "')")
+            for _ in range(2):
+                con.execute(f"Insert Into test values ('{str(i)}')")
         con.execute("Insert Into test values ('5000')")
         con.execute("Insert Into test values ('6000')")
         sql = '''

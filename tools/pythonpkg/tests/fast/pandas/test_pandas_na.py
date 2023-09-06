@@ -7,7 +7,7 @@ import pytest
 def assert_nullness(items, null_indices):
     for i in range(len(items)):
         if i in null_indices:
-            assert items[i] == None
+            assert items[i] is None
         else:
             assert items[i] != None
 
@@ -21,13 +21,13 @@ class TestPandasNA(object):
         conn = duckdb.connect()
 
         res = conn.execute("select * from df").fetchall()
-        assert res[0][0] == None
+        assert res[0][0] is None
 
         # DataFrame containing multiple values, with a pd.NA mixed in
         null_index = 3
         df = pd.DataFrame(pd.Series([3, 1, 2, pd.NA, 8, 6]))
         res = conn.execute("select * from df").fetchall()
-        items = [x[0] for x in [y for y in res]]
+        items = [x[0] for x in list(res)]
         assert_nullness(items, [null_index])
 
         # Test if pd.NA behaves the same as np.NaN once converted
@@ -70,5 +70,5 @@ class TestPandasNA(object):
         na_string_df = pd.DataFrame({'a': [str(pd.NA), str(pd.NA), pd.NA, str(pd.NA), pd.NA, pd.NA, pd.NA, str(pd.NA)]})
         null_indices = [2, 4, 5, 6]
         res = conn.execute("select * from na_string_df").fetchall()
-        items = [x[0] for x in [y for y in res]]
+        items = [x[0] for x in list(res)]
         assert_nullness(items, null_indices)
