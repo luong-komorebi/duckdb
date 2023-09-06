@@ -48,9 +48,7 @@ for entry in new_timings_l:
 slow_keys = []
 multiply_percentage = 1.0 + regression_threshold_percentage
 
-test_keys = list(new_timings.keys())
-test_keys.sort()
-
+test_keys = sorted(new_timings.keys())
 for key in test_keys:
     new_timing = new_timings[key]
     old_timing = old_timings[key]
@@ -58,7 +56,7 @@ for key in test_keys:
         slow_keys.append(key)
 
 return_code = 0
-if len(slow_keys) > 0:
+if slow_keys:
     print(
         '''====================================================
 ==============  REGRESSIONS DETECTED   =============

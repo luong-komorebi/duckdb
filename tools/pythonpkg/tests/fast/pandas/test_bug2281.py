@@ -15,4 +15,3 @@ foo,1,0'''
         duckdb_cursor.register("c", df)
         duckdb_cursor.execute('select what, count(*) from c group by what')
         df_result = duckdb_cursor.fetchdf()
-        assert True  # Should not crash ^^

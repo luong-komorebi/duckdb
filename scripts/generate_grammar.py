@@ -7,7 +7,6 @@ import re
 import sys
 from python_helpers import open_utf8
 
-bison_location = "bison"
 base_dir = 'third_party/libpg_query/grammar'
 pg_dir = 'third_party/libpg_query'
 namespace = 'duckdb_libpgquery'
@@ -15,6 +14,7 @@ namespace = 'duckdb_libpgquery'
 counterexamples = False
 run_update = False
 verbose = False
+bison_location = "bison"
 for arg in sys.argv[1:]:
     if arg.startswith("--bison="):
         bison_location = arg.replace("--bison=", "")
@@ -22,7 +22,6 @@ for arg in sys.argv[1:]:
         counterexamples = True
     elif arg.startswith("--update"):
         run_update = True
-    # allow a prefix to the source and target directories
     elif arg.startswith("--custom_dir_prefix"):
         base_dir = arg.split("=")[1] + base_dir
         pg_dir = arg.split("=")[1] + pg_dir
@@ -32,9 +31,7 @@ for arg in sys.argv[1:]:
         verbose = True
     else:
         raise Exception(
-            "Unrecognized argument: "
-            + arg
-            + ", expected --counterexamples, --bison=/loc/to/bison, --custom_dir_prefix, --namespace, --verbose"
+            f"Unrecognized argument: {arg}, expected --counterexamples, --bison=/loc/to/bison, --custom_dir_prefix, --namespace, --verbose"
         )
 
 template_file = os.path.join(base_dir, 'grammar.y')
@@ -65,10 +62,7 @@ reserved_keywords = read_list_from_file(os.path.join(kwdir, 'reserved_keywords.l
 
 
 def strip_p(x):
-    if x.endswith("_P"):
-        return x[:-2]
-    else:
-        return x
+    return x[:-2] if x.endswith("_P") else x
 
 
 unreserved_keywords.sort(key=lambda x: strip_p(x))
@@ -83,11 +77,7 @@ if len(statements) < 0:
     print("Need at least one statement")
     exit(1)
 
-# verify there are no duplicate keywords and create big sorted list of keywords
-kwdict = {}
-for kw in unreserved_keywords:
-    kwdict[kw] = 'UNRESERVED_KEYWORD'
-
+kwdict = {kw: 'UNRESERVED_KEYWORD' for kw in unreserved_keywords}
 for kw in colname_keywords:
     kwdict[kw] = 'COL_NAME_KEYWORD'
 
@@ -100,7 +90,7 @@ for kw in type_name_keywords:
 for kw in reserved_keywords:
     kwdict[kw] = 'RESERVED_KEYWORD'
 
-kwlist = [(x, kwdict[x]) for x in kwdict.keys()]
+kwlist = [(x, kwdict[x]) for x in kwdict]
 kwlist.sort(key=lambda x: strip_p(x[0]))
 
 # now generate kwlist.h
@@ -143,10 +133,7 @@ with open_utf8(template_file, 'r') as f:
 def get_file_contents(fpath, add_line_numbers=False):
     with open_utf8(fpath, 'r') as f:
         result = f.read()
-        if add_line_numbers:
-            return '#line 1 "%s"\n' % (fpath,) + result
-        else:
-            return result
+        return '#line 1 "%s"\n' % (fpath,) + result if add_line_numbers else result
 
 
 # grammar.hpp
@@ -175,16 +162,16 @@ unreserved_dict = {}
 other_dict = {}
 for r in reserved_keywords:
     if r in reserved_dict:
-        print("Duplicate keyword " + r + " in reserved keywords")
+        print(f"Duplicate keyword {r} in reserved keywords")
         exit(1)
     reserved_dict[r] = True
 
 for ur in unreserved_keywords:
     if ur in unreserved_dict:
-        print("Duplicate keyword " + ur + " in unreserved keywords")
+        print(f"Duplicate keyword {ur} in unreserved keywords")
         exit(1)
     if ur in reserved_dict:
-        print("Keyword " + ur + " is marked as both unreserved and reserved")
+        print(f"Keyword {ur} is marked as both unreserved and reserved")
         exit(1)
     unreserved_dict[ur] = True
 
@@ -194,10 +181,10 @@ def add_to_other_keywords(kw, list_name):
     global reserved_dict
     global other_dict
     if kw in unreserved_dict:
-        print("Keyword " + kw + " is marked as both unreserved and " + list_name)
+        print(f"Keyword {kw} is marked as both unreserved and {list_name}")
         exit(1)
     if kw in reserved_dict:
-        print("Keyword " + kw + " is marked as both reserved and " + list_name)
+        print(f"Keyword {kw} is marked as both reserved and {list_name}")
         exit(1)
     other_dict[kw] = True
 
@@ -214,15 +201,11 @@ for fr in func_name_keywords:
     add_to_other_keywords(fr, "funcname")
     type_func_name_dict[fr] = True
 
-type_func_name_keywords = list(type_func_name_dict.keys())
-type_func_name_keywords.sort()
-
+type_func_name_keywords = sorted(type_func_name_dict.keys())
 all_keywords = list(reserved_dict.keys()) + list(unreserved_dict.keys()) + list(other_dict.keys())
 all_keywords.sort()
 
-other_keyword = list(other_dict.keys())
-other_keyword.sort()
-
+other_keyword = sorted(other_dict.keys())
 kw_definitions = "unreserved_keyword: " + " | ".join(unreserved_keywords) + "\n"
 kw_definitions += "col_name_keyword: " + " | ".join(colname_keywords) + "\n"
 kw_definitions += "func_name_keyword: " + " | ".join(func_name_keywords) + "\n"
@@ -240,9 +223,7 @@ def concat_dir(dname, extension, add_line_numbers=False):
         fpath = os.path.join(dname, fname)
         if os.path.isdir(fpath):
             result += concat_dir(fpath, extension)
-        else:
-            if not fname.endswith(extension):
-                continue
+        elif fname.endswith(extension):
             result += get_file_contents(fpath, add_line_numbers)
     return result
 
@@ -250,7 +231,7 @@ def concat_dir(dname, extension, add_line_numbers=False):
 type_definitions = concat_dir(type_dir, ".yh")
 # add statement types as well
 for stmt in statements:
-    type_definitions += "%type <node> " + stmt + "\n"
+    type_definitions += f"%type <node> {stmt}" + "\n"
 
 text = text.replace("{{{ TYPES }}}", type_definitions)
 

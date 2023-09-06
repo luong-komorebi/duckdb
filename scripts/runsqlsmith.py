@@ -20,7 +20,7 @@ if len(sys.argv) == 2:
     elif sys.argv[1] == '--reset':
         c.execute('DROP TABLE IF EXISTS sqlsmith_errors')
     else:
-        print('Unknown query option ' + sys.argv[1])
+        print(f'Unknown query option {sys.argv[1]}')
         exit(1)
 
 if export_queries:

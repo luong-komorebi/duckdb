@@ -81,7 +81,7 @@ def compare_database(standard_db, zero_init_db):
         zero_data = f.read()
     if len(standard_data) != len(zero_data):
         print(
-            f"FAIL - Length mismatch between database {standard_db} ({str(len(standard_data))}) and {zero_init_db} ({str(len(zero_data))})"
+            f"FAIL - Length mismatch between database {standard_db} ({len(standard_data)}) and {zero_init_db} ({len(zero_data)})"
         )
         return False
     found_error = None
@@ -147,9 +147,9 @@ for test in test_list:
         '--single-threaded',
         test,
     ]
-    print(f"Running test in one-initialize mode")
+    print("Running test in one-initialize mode")
     run_test(standard_args)
-    print(f"Running test in zero-initialize mode")
+    print("Running test in zero-initialize mode")
     run_test(zero_init_args)
     if not compare_files(args.standard_dir, args.zero_init_dir):
         success = False

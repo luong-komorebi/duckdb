@@ -65,7 +65,7 @@ def run_benchmark(runner, benchmark):
     err = proc.stderr.read().decode('utf8')
     proc.wait()
     if proc.returncode != 0:
-        print("Failed to run benchmark " + benchmark)
+        print(f"Failed to run benchmark {benchmark}")
         print(
             '''====================================================
 ==============         STDERR          =============
@@ -80,7 +80,7 @@ def run_benchmark(runner, benchmark):
 '''
         )
         print(out)
-        return 'Failed to run benchmark ' + benchmark
+        return f'Failed to run benchmark {benchmark}'
     if verbose:
         print(err)
     # read the input CSV
@@ -99,16 +99,16 @@ def run_benchmark(runner, benchmark):
                 complete_timings[runner].append(row[2])
         return float(statistics.median(timings))
     except:
-        print("Failed to run benchmark " + benchmark)
+        print(f"Failed to run benchmark {benchmark}")
         print(err)
-        return 'Failed to run benchmark ' + benchmark
+        return f'Failed to run benchmark {benchmark}'
 
 
 def run_benchmarks(runner, benchmark_list):
-    results = {}
-    for benchmark in benchmark_list:
-        results[benchmark] = run_benchmark(runner, benchmark)
-    return results
+    return {
+        benchmark: run_benchmark(runner, benchmark)
+        for benchmark in benchmark_list
+    }
 
 
 # read the initial benchmark list
@@ -149,7 +149,7 @@ for i in range(number_repetitions):
 
 exit_code = 0
 regression_list += error_list
-if len(regression_list) > 0:
+if regression_list:
     exit_code = 1
     print(
         '''====================================================

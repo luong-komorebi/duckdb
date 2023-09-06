@@ -26,7 +26,7 @@ class TestArrowFetch(object):
         duckdb_conn = duckdb.connect()
         duckdb_conn.execute("CREATE TABLE test (a  INTEGER)")
         for value in range(10000):
-            duckdb_conn.execute("INSERT INTO  test VALUES (" + str(value) + ");")
+            duckdb_conn.execute(f"INSERT INTO  test VALUES ({str(value)});")
         duckdb_conn.execute("INSERT INTO  test VALUES(NULL);")
 
         check_equal(duckdb_conn)
@@ -48,7 +48,7 @@ class TestArrowFetch(object):
 
         duckdb_conn.execute("CREATE TABLE test (a  INTEGER)")
         for value in range(10000):
-            duckdb_conn.execute("INSERT INTO  test VALUES (" + str(value) + ");")
+            duckdb_conn.execute(f"INSERT INTO  test VALUES ({str(value)});")
         duckdb_conn.execute("INSERT INTO  test VALUES(NULL);")
 
         check_equal(duckdb_conn)
@@ -85,7 +85,7 @@ class TestArrowFetch(object):
         duckdb_conn.execute("PREPARE s1 AS INSERT INTO test VALUES ($1), ($2 / 2)")
 
         for value in range(10000):
-            duckdb_conn.execute("EXECUTE s1(" + str(value) + "," + str(value * 2) + ");")
+            duckdb_conn.execute(f"EXECUTE s1({str(value)},{str(value * 2)});")
 
         check_equal(duckdb_conn)
 

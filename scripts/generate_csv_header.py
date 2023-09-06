@@ -9,10 +9,7 @@ def get_csv_text(fpath, add_null_terminator=False):
     result_text = ""
     first = True
     for byte in text:
-        if first:
-            result_text += str(byte)
-        else:
-            result_text += ", " + str(byte)
+        result_text += str(byte) if first else f", {str(byte)}"
         first = False
     if add_null_terminator:
         result_text += ", 0"
@@ -25,7 +22,7 @@ def write_dir(dirname, varname):
     result = ""
     aggregated_result = "const char *%s[] = {\n" % (varname,)
     for fname in files:
-        file_varname = "%s_%s" % (varname, fname.split('.')[0])
+        file_varname = f"{varname}_{fname.split('.')[0]}"
         result += "const uint8_t %s[] = {" % (file_varname,) + get_csv_text(os.path.join(dirname, fname), True) + "};\n"
         aggregated_result += "\t(const char*) %s,\n" % (file_varname,)
     aggregated_result = aggregated_result[:-2] + "\n};\n"

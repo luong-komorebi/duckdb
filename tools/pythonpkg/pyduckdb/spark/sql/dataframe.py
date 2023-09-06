@@ -68,8 +68,7 @@ class DataFrame:
     def collect(self) -> List[Row]:
         columns = self.relation.columns
         result = self.relation.fetchall()
-        rows = [Row(**dict(zip(columns, x))) for x in result]
-        return rows
+        return [Row(**dict(zip(columns, x))) for x in result]
 
 
 __all__ = ["DataFrame"]

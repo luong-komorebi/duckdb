@@ -140,7 +140,9 @@ def get_includes(fpath, text):
                 found = True
                 break
         if not found:
-            raise Exception('Could not find include file "' + included_file + '", included from file "' + fpath + '"')
+            raise Exception(
+                f'Could not find include file "{included_file}", included from file "{fpath}"'
+            )
     return (include_statements, include_files)
 
 
@@ -165,10 +167,7 @@ def need_to_write_file(current_file, ignore_excluded=False):
     if current_file.split(os.sep)[-1] in excluded_files and not ignore_excluded:
         # file is in ignored files set
         return False
-    if current_file in written_files:
-        # file is already written
-        return False
-    return True
+    return current_file not in written_files
 
 
 def find_license(original_file):
@@ -183,7 +182,7 @@ def find_license(original_file):
         if os.path.exists(potential_license):
             license = potential_license
     if license == "":
-        raise "Could not find license for %s" % original_file
+        raise f"Could not find license for {original_file}"
 
     if license not in licenses:
         licenses += [license]
@@ -276,17 +275,16 @@ def git_dev_version():
         if int(dev_version) == 0:
             # directly on a tag: emit the regular version
             return '.'.join(version_splits)
-        else:
-            # not on a tag: increment the version by one and add a -devX suffix
-            version_splits[2] = str(int(version_splits[2]) + 1)
-            return '.'.join(version_splits) + "-dev" + dev_version
+        # not on a tag: increment the version by one and add a -devX suffix
+        version_splits[2] = str(int(version_splits[2]) + 1)
+        return '.'.join(version_splits) + "-dev" + dev_version
     except:
         return "0.0.0"
 
 
 def generate_duckdb_hpp(header_file):
     print("-----------------------")
-    print("-- Writing " + header_file + " --")
+    print(f"-- Writing {header_file} --")
     print("-----------------------")
     with open_utf8(temp_header, 'w+') as hfile:
         hfile.write("/*\n")
@@ -310,24 +308,22 @@ def generate_amalgamation(source_file, header_file):
 
     # now construct duckdb.cpp
     print("------------------------")
-    print("-- Writing " + source_file + " --")
+    print(f"-- Writing {source_file} --")
     print("------------------------")
 
     # scan all the .cpp files
     with open_utf8(temp_source, 'w+') as sfile:
         header_file_name = header_file.split(os.sep)[-1]
-        sfile.write('#include "' + header_file_name + '"\n\n')
+        sfile.write(f'#include "{header_file_name}' + '"\n\n')
         sfile.write("#ifndef DUCKDB_AMALGAMATION\n#error header mismatch\n#endif\n\n")
         sfile.write("#if (!defined(DEBUG) && !defined NDEBUG)\n#define NDEBUG\n#endif\n\n")
         for compile_dir in compile_directories:
             sfile.write(write_dir(compile_dir))
 
         sfile.write('\n\n/*\n')
-        license_idx = 0
-        for license in licenses:
+        for license_idx, license in enumerate(licenses):
             sfile.write("\n\n\n### THIRD PARTY LICENSE #%s ###\n\n" % str(license_idx + 1))
             sfile.write(write_file(license))
-            license_idx += 1
         sfile.write('\n\n*/\n')
 
     copy_if_different(temp_header, header_file)
@@ -458,18 +454,14 @@ def generate_amalgamation_splits(source_file, header_file, nsplits):
     else:
         raise "Unknown extension of header file"
 
-    temp_internal_header = internal_header_file + '.tmp'
+    temp_internal_header = f'{internal_header_file}.tmp'
 
     with open_utf8(temp_internal_header, 'w+') as f:
         write_license(f)
         for hfile in header_files:
             f.write(hfile)
 
-    # count the total amount of bytes in the source files
-    total_bytes = 0
-    for sfile in source_files:
-        total_bytes += len(sfile)
-
+    total_bytes = sum(len(sfile) for sfile in source_files)
     # now write the individual splits
     # we approximate the splitting up by making every file have roughly the same amount of bytes
     split_bytes = total_bytes / nsplits
@@ -502,10 +494,11 @@ def generate_amalgamation_splits(source_file, header_file, nsplits):
     internal_header_file_name = internal_header_file.split(os.sep)[-1]
 
     partition_fnames = []
-    current_partition = 0
-    for partition in partitions:
-        partition_name = source_file.replace('.cpp', '-%s.cpp' % (partition_names[current_partition],))
-        temp_partition_name = partition_name + '.tmp'
+    for current_partition, partition in enumerate(partitions):
+        partition_name = source_file.replace(
+            '.cpp', f'-{partition_names[current_partition]}.cpp'
+        )
+        temp_partition_name = f'{partition_name}.tmp'
         partition_fnames.append([partition_name, temp_partition_name])
         with open_utf8(temp_partition_name, 'w+') as f:
             write_license(f)
@@ -519,8 +512,6 @@ def generate_amalgamation_splits(source_file, header_file, nsplits):
             )
             for sfile in partition:
                 f.write(sfile)
-        current_partition += 1
-
     copy_if_different(temp_header, header_file)
     copy_if_different(temp_internal_header, internal_header_file)
     try:
@@ -563,7 +554,7 @@ if __name__ == "__main__":
             exit(1)
         elif arg.startswith('--includes'):
             include_dirs = list_include_dirs()
-            print(' '.join(['-I' + x for x in include_dirs]))
+            print(' '.join([f'-I{x}' for x in include_dirs]))
             exit(1)
         elif arg.startswith('--include-directories'):
             include_dirs = list_include_dirs()

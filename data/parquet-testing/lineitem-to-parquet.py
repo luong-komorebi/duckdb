@@ -26,7 +26,7 @@ schema = StructType([
     StructField("l_extendedprice", DoubleType(),  False),
     StructField("l_discount",      DoubleType(),  False),
     StructField("l_tax",           DoubleType(),  False),
- 
+
     StructField("l_returnflag",    StringType(),  False),
     StructField("l_linestatus",    StringType(),  False),
 
@@ -41,4 +41,7 @@ schema = StructType([
 df = spark.read.format("csv").schema(schema).option("header", "false").option("delimiter", "|").load("lineitem-sf1.tbl.gz").repartition(1)
 df.write.mode('overwrite').format("parquet").save(parquet_folder)
 
-os.rename(glob.glob(os.path.join(parquet_folder, '*.parquet'))[0], "lineitem-sf1.%s.parquet" % parquet_compression)
+os.rename(
+    glob.glob(os.path.join(parquet_folder, '*.parquet'))[0],
+    f"lineitem-sf1.{parquet_compression}.parquet",
+)

@@ -49,28 +49,28 @@ def get_github_hash():
 
 # github stuff
 def issue_url():
-    return 'https://api.github.com/repos/%s/%s/issues' % (REPO_OWNER, REPO_NAME)
+    return f'https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/issues'
 
 
 def create_session():
     # Create an authenticated session to create the issue
     session = requests.Session()
-    session.headers.update({'Authorization': 'token %s' % (TOKEN,)})
+    session.headers.update({'Authorization': f'token {TOKEN}'})
     return session
 
 
 def make_github_issue(title, body):
     if len(title) > 240:
         #  avoid title is too long error (maximum is 256 characters)
-        title = title[:240] + '...'
+        title = f'{title[:240]}...'
     session = create_session()
     url = issue_url()
     issue = {'title': title, 'body': body}
     r = session.post(url, json.dumps(issue))
     if r.status_code == 201:
-        print('Successfully created Issue "%s"' % title)
+        print(f'Successfully created Issue "{title}"')
     else:
-        print('Could not create Issue "%s"' % title)
+        print(f'Could not create Issue "{title}"')
         print('Response:', r.content.decode('utf8'))
         raise Exception("Failed to create issue")
 
@@ -88,7 +88,7 @@ def get_github_issues():
 
 def close_github_issue(number):
     session = create_session()
-    url = issue_url() + '/' + str(number)
+    url = f'{issue_url()}/{str(number)}'
     params = {'state': 'closed'}
     r = session.patch(url, json.dumps(params))
     if r.status_code == 200:
@@ -125,7 +125,7 @@ def test_reproducibility(shell, issue, current_errors):
     if extract is None:
         # failed extract: leave the issue as-is
         return True
-    sql = extract[0] + ';'
+    sql = f'{extract[0]};'
     error = extract[1]
     (stdout, stderr, returncode) = run_shell_command_batch(shell, sql)
     if returncode == 0:
@@ -138,7 +138,7 @@ def test_reproducibility(shell, issue, current_errors):
 
 
 def extract_github_issues(shell):
-    current_errors = dict()
+    current_errors = {}
     issues = get_github_issues()
     for issue in issues:
         # check if the github issue is still reproducible
@@ -174,6 +174,4 @@ def is_internal_error(error):
         return True
     if 'Sanitizer' in error or 'sanitizer' in error:
         return True
-    if 'runtime error' in error:
-        return True
-    return False
+    return 'runtime error' in error

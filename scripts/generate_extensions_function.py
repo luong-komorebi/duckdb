@@ -64,10 +64,12 @@ base_settings = get_settings()
 function_map = {}
 settings_map = {}
 
-# root_dir needs a trailing slash (i.e. /root/dir/)
-extension_path = {}
-for filename in glob.iglob('/tmp/' + '**/*.duckdb_extension', recursive=True):
-    extension_path[os.path.splitext(os.path.basename(filename))[0]] = filename
+extension_path = {
+    os.path.splitext(os.path.basename(filename))[0]: filename
+    for filename in glob.iglob(
+        '/tmp/' + '**/*.duckdb_extension', recursive=True
+    )
+}
 
 
 def update_extensions(extension_name, function_list, settings_list):
@@ -112,7 +114,7 @@ if args.validate:
     print(sorted(list(cur_function_map)))
     print("Function + Settings Map: ")
     print(sorted(list(function_map)))
-    if len(cur_function_map) == 0:
+    if not cur_function_map:
         print("Current function map is empty?")
         exit(1)
     if cur_function_map != function_map:
@@ -127,9 +129,8 @@ if args.validate:
                 print(f"Function {f} of cur_function_map does not exist in function_map")
         exit(1)
 else:
-    # extension_functions
-    file = open(ext_hpp, 'w')
-    header = """//===----------------------------------------------------------------------===//
+    with open(ext_hpp, 'w') as file:
+        header = """//===----------------------------------------------------------------------===//
 //                         DuckDB
 //
 // duckdb/main/extension_entries.hpp
@@ -151,30 +152,28 @@ struct ExtensionEntry {
 
 static constexpr ExtensionEntry EXTENSION_FUNCTIONS[] = {
 """
-    file.write(header)
-    # functions
-    sorted_function = sorted(function_map)
+        file.write(header)
+        # functions
+        sorted_function = sorted(function_map)
 
-    for function_name in sorted_function:
-        file.write("    {")
-        file.write(f'"{function_name}", "{function_map[function_name]}"')
-        file.write("}, \n")
-    file.write("};\n")
+        for function_name in sorted_function:
+            file.write("    {")
+            file.write(f'"{function_name}", "{function_map[function_name]}"')
+            file.write("}, \n")
+        file.write("};\n")
 
-    # settings
-    header = """
+        # settings
+        header = """
 static constexpr ExtensionEntry EXTENSION_SETTINGS[] = {
 """
-    file.write(header)
-    # Sort Function Map
-    sorted_settings = sorted(settings_map)
+        file.write(header)
+        # Sort Function Map
+        sorted_settings = sorted(settings_map)
 
-    for settings_name in sorted_settings:
-        file.write("    {")
-        file.write(f'"{settings_name.lower()}", "{settings_map[settings_name]}"')
-        file.write("}, \n")
-    footer = """};
+        for settings_name in sorted_settings:
+            file.write("    {")
+            file.write(f'"{settings_name.lower()}", "{settings_map[settings_name]}"')
+            file.write("}, \n")
+        footer = """};
 } // namespace duckdb"""
-    file.write(footer)
-
-    file.close()
+        file.write(footer)

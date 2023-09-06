@@ -18,8 +18,7 @@ def check_equal(df, reference_query):
 
 
 def create_reference_query(data):
-    query = "CREATE TABLE tbl AS SELECT " + str(data).replace("None", "NULL")
-    return query
+    return "CREATE TABLE tbl AS SELECT " + str(data).replace("None", "NULL")
 
 
 class TestDFRecursiveNested(object):

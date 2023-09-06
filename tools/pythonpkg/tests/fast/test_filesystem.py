@@ -201,20 +201,20 @@ class TestPythonFilesystem:
 
         path = 'memory:///partition/*/*.csv'
 
-        query = "SELECT * FROM read_csv_auto('" + path + "'"
+        query = f"SELECT * FROM read_csv_auto('{path}'"
 
         # hive partitioning
-        duckdb_cursor.execute(query + ', HIVE_PARTITIONING=1' + ');')
+        duckdb_cursor.execute(f'{query}, HIVE_PARTITIONING=1);')
         assert duckdb_cursor.fetchall() == [(2, 2)]
 
         # hive partitioning: auto detection
-        duckdb_cursor.execute(query + ');')
+        duckdb_cursor.execute(f'{query});')
         assert duckdb_cursor.fetchall() == [(2, 2)]
 
         # hive partitioning: cast to int
-        duckdb_cursor.execute(query + ', HIVE_PARTITIONING=1' + ', HIVE_TYPES_AUTOCAST=1' + ');')
+        duckdb_cursor.execute(f'{query}, HIVE_PARTITIONING=1, HIVE_TYPES_AUTOCAST=1);')
         assert duckdb_cursor.fetchall() == [(2, 2)]
 
         # hive partitioning: no cast to int
-        duckdb_cursor.execute(query + ', HIVE_PARTITIONING=1' + ', HIVE_TYPES_AUTOCAST=0' + ');')
+        duckdb_cursor.execute(f'{query}, HIVE_PARTITIONING=1, HIVE_TYPES_AUTOCAST=0);')
         assert duckdb_cursor.fetchall() == [(2, '2')]

@@ -16,7 +16,7 @@ merged_overlay_ports = []
 
 def prefix_overlay_ports(overlay_ports, path_to_vcpkg_json):
     def prefix_overlay_port(overlay_port):
-        vcpkg_prefix_path = path_to_vcpkg_json[0 : path_to_vcpkg_json.find("/vcpkg.json")]
+        vcpkg_prefix_path = path_to_vcpkg_json[:path_to_vcpkg_json.find("/vcpkg.json")]
         return vcpkg_prefix_path + overlay_port
 
     return map(prefix_overlay_port, overlay_ports)
@@ -38,15 +38,11 @@ for file in sys.argv[1:]:
         if 'overlay-ports' in data['vcpkg-configuration']:
             merged_overlay_ports += prefix_overlay_ports(data['vcpkg-configuration']['overlay-ports'], file)
 
-final_deduplicated_deps = list()
 dedup_set = set()
 
-for dep in dependencies_dict:
-    if dep['name'] not in dedup_set:
-        final_deduplicated_deps.append(dep)
-        # TODO: deduplication is disabled for now, just let vcpkg handle duplicates in deps
-        # dedup_set.add(dep['name'])
-
+final_deduplicated_deps = [
+    dep for dep in dependencies_dict if dep['name'] not in dedup_set
+]
 for dep in dependencies_str:
     if dep not in dedup_set:
         final_deduplicated_deps.append(dep)
@@ -54,7 +50,7 @@ for dep in dependencies_str:
         # dedup_set.add(dep)
 
 data = {
-    "description": f"Auto-generated vcpkg.json for combined DuckDB extension build",
+    "description": "Auto-generated vcpkg.json for combined DuckDB extension build",
     "builtin-baseline": "501db0f17ef6df184fcdbfbe0f87cde2313b6ab1",
     "dependencies": final_deduplicated_deps,
     "overrides": [{"name": "openssl", "version": "3.0.8"}],

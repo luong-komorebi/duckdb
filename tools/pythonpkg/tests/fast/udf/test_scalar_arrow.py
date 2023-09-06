@@ -50,7 +50,7 @@ class TestPyArrowUDF(object):
     def test_varargs(self):
         def variable_args(*args):
             # We return a chunked array here, but internally we convert this into a Table
-            if len(args) == 0:
+            if not args:
                 raise ValueError("Expected at least one argument")
             for item in args:
                 return item

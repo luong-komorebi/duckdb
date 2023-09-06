@@ -66,9 +66,7 @@ if platform.system() == 'Windows':
 if platform.system() == 'Linux' and platform.architecture()[0] == '64bit' and not hasattr(sys, 'getandroidapilevel'):
     extensions.append('jemalloc')
 
-unity_build = 0
-if 'DUCKDB_BUILD_UNITY' in os.environ:
-    unity_build = 16
+unity_build = 16 if 'DUCKDB_BUILD_UNITY' in os.environ else 0
 
 
 def parallel_cpp_compile(
@@ -148,7 +146,7 @@ for i in range(len(sys.argv)):
     else:
         new_sys_args.append(sys.argv[i])
 sys.argv = new_sys_args
-toolchain_args.append('-DDUCKDB_PYTHON_LIB_NAME=' + lib_name)
+toolchain_args.append(f'-DDUCKDB_PYTHON_LIB_NAME={lib_name}')
 
 if platform.system() == 'Darwin':
     toolchain_args.extend(['-stdlib=libc++', '-mmacosx-version-min=10.7'])
@@ -161,7 +159,7 @@ if 'BUILD_HTTPFS' in os.environ:
     extensions += ['httpfs']
 
 for ext in extensions:
-    toolchain_args.extend(['-DDUCKDB_EXTENSION_{}_LINKED'.format(ext.upper())])
+    toolchain_args.extend([f'-DDUCKDB_EXTENSION_{ext.upper()}_LINKED'])
 
 
 class get_pybind_include(object):
@@ -179,8 +177,7 @@ header_files = []
 
 
 def list_source_files(directory):
-    sources = glob('src/**/*.cpp', recursive=True)
-    return sources
+    return glob('src/**/*.cpp', recursive=True)
 
 
 script_path = os.path.dirname(os.path.abspath(__file__))
@@ -246,7 +243,7 @@ if len(existing_duckdb_dir) == 0:
     include_directories = duckdb_includes + include_directories
 
     libduckdb = Extension(
-        lib_name + '.duckdb',
+        f'{lib_name}.duckdb',
         include_dirs=include_directories,
         sources=source_files,
         extra_compile_args=toolchain_args,
@@ -259,14 +256,14 @@ else:
     import package_build
 
     include_directories += [os.path.join('..', '..', include) for include in package_build.third_party_includes()]
-    toolchain_args += ['-I' + x for x in package_build.includes(extensions)]
+    toolchain_args += [f'-I{x}' for x in package_build.includes(extensions)]
 
     result_libraries = package_build.get_libraries(existing_duckdb_dir, libraries, extensions)
     library_dirs = [x[0] for x in result_libraries if x[0] is not None]
     libnames = [x[1] for x in result_libraries if x[1] is not None]
 
     libduckdb = Extension(
-        lib_name + '.duckdb',
+        f'{lib_name}.duckdb',
         include_dirs=include_directories,
         sources=main_source_files,
         extra_compile_args=toolchain_args,
@@ -304,13 +301,12 @@ def setup_data_files(data_files):
         if directory not in directory_map:
             directory_map[directory] = []
         directory_map[directory].append(normalized_fpath)
-    new_data_files = []
-    for kv in directory_map.keys():
-        new_data_files.append((kv, directory_map[kv]))
-    return new_data_files
+    return list(directory_map.items())
 
 
 data_files = setup_data_files(extra_files + header_files)
+
+spark_packages = ['pyduckdb.spark', 'pyduckdb.spark.sql']
 
 packages = [
     lib_name,
@@ -322,12 +318,8 @@ packages = [
     'duckdb-stubs.functional',
     'duckdb-stubs.typing',
     'adbc_driver_duckdb',
+    *spark_packages,
 ]
-
-spark_packages = ['pyduckdb.spark', 'pyduckdb.spark.sql']
-
-packages.extend(spark_packages)
-
 setup(
     name=lib_name,
     description='DuckDB embedded database',

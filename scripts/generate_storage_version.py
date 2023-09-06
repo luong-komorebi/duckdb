@@ -19,7 +19,7 @@ def try_remove_file(fname):
 
 
 try_remove_file(gen_storage_target)
-try_remove_file(gen_storage_target + '.wal')
+try_remove_file(f'{gen_storage_target}.wal')
 
 
 def run_command_in_shell(cmd):
@@ -46,4 +46,4 @@ run_command_in_shell(cmd)
 run_command_in_shell('select * from integral_values')
 run_command_in_shell('select * from integral_values')
 
-try_remove_file(gen_storage_target + '.wal')
+try_remove_file(f'{gen_storage_target}.wal')

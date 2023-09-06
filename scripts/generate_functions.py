@@ -81,7 +81,7 @@ for path in all_function_types:
             print(f'Struct name {struct_name} is not a valid struct name!')
             exit(1)
         if struct_name in function_type_set:
-            raise Exception("Duplicate entry " + struct_name)
+            raise Exception(f"Duplicate entry {struct_name}")
         function_type_set[struct_name] = entry['type']
         if entry['type'] == 'scalar_function':
             function_text = 'static ScalarFunction GetFunction();'
@@ -125,22 +125,22 @@ for path in all_function_types:
             for alias in entry['aliases']:
                 alias_struct_name = get_struct_name(alias)
                 if not legal_struct_name(alias_struct_name):
-                    alias_struct_name = struct_name + 'Alias'
+                    alias_struct_name = f'{struct_name}Alias'
                     if alias_count > 1:
                         alias_struct_name += str(alias_count)
                     alias_count += 1
 
                 aliased_type = entry['type']
-                if aliased_type == 'scalar_function':
-                    all_function_list.append([alias, f"DUCKDB_SCALAR_FUNCTION_ALIAS({alias_struct_name})"])
-                elif aliased_type == 'scalar_function_set':
-                    all_function_list.append([alias, f"DUCKDB_SCALAR_FUNCTION_SET_ALIAS({alias_struct_name})"])
-                elif aliased_type == 'aggregate_function':
+                if aliased_type == 'aggregate_function':
                     all_function_list.append([alias, f"DUCKDB_AGGREGATE_FUNCTION_ALIAS({alias_struct_name})"])
                 elif aliased_type == 'aggregate_function_set':
                     all_function_list.append([alias, f"DUCKDB_AGGREGATE_FUNCTION_SET_ALIAS({alias_struct_name})"])
+                elif aliased_type == 'scalar_function':
+                    all_function_list.append([alias, f"DUCKDB_SCALAR_FUNCTION_ALIAS({alias_struct_name})"])
+                elif aliased_type == 'scalar_function_set':
+                    all_function_list.append([alias, f"DUCKDB_SCALAR_FUNCTION_SET_ALIAS({alias_struct_name})"])
                 else:
-                    print("Unknown entry type " + aliased_type + ' for entry ' + struct_name)
+                    print(f"Unknown entry type {aliased_type} for entry {struct_name}")
                     exit(1)
                 function_type_set[alias_struct_name] = aliased_type
                 new_text += (
@@ -168,12 +168,14 @@ static_function = 'static StaticFunctionDefinition internal_functions[] = {'
 pos = text.find(static_function)
 header = text[:pos]
 footer_lines = text[pos:].split('\n')
-footer = ''
-for i in range(len(footer_lines)):
-    if len(footer_lines[i]) == 0:
-        footer = '\n'.join(footer_lines[i:])
-        break
-
+footer = next(
+    (
+        '\n'.join(footer_lines[i:])
+        for i in range(len(footer_lines))
+        if len(footer_lines[i]) == 0
+    ),
+    '',
+)
 new_text = header
 new_text += static_function + '\n'
 all_function_list = sorted(all_function_list, key=lambda x: x[0])

@@ -10,8 +10,9 @@ from io import StringIO, BytesIO
 def TestFile(name):
     import os
 
-    filename = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'data', name)
-    return filename
+    return os.path.join(
+        os.path.dirname(os.path.realpath(__file__)), '..', 'data', name
+    )
 
 
 class TestReadCSV(object):
@@ -338,10 +339,11 @@ class TestReadCSV(object):
     def test_filelike_custom(self, duckdb_cursor):
         _ = pytest.importorskip("fsspec")
 
+
+
         class CustomIO:
             def __init__(self):
                 self.loc = 0
-                pass
 
             def seek(self, loc):
                 self.loc = loc
@@ -351,6 +353,7 @@ class TestReadCSV(object):
                 out = b"c1,c2,c3\na,b,c"[self.loc : self.loc + amount : 1]
                 self.loc += amount
                 return out
+
 
         obj = CustomIO()
         res = duckdb_cursor.read_csv(obj, header=True).fetchall()

@@ -49,7 +49,7 @@ proc = subprocess.Popen([unittest_program, '-l', '[memoryleak]'], stdout=subproc
 stdout = proc.stdout.read().decode('utf8')
 stderr = proc.stderr.read().decode('utf8')
 if proc.returncode is not None and proc.returncode != 0:
-    print("Failed to run program " + unittest_program)
+    print(f"Failed to run program {unittest_program}")
     print(proc.returncode)
     print(stdout)
     print(stderr)
@@ -67,7 +67,7 @@ for line in stdout.splitlines():
     if test_filter == '*' or test_filter in splits[0]:
         test_cases.append(splits[0])
 
-if len(test_cases) == 0:
+if not test_cases:
     print(f"No tests matching filter \"{test_filter}\" found")
     exit(0)
 
@@ -90,7 +90,7 @@ def run_test(test_case):
     # capture the memory output for the duration of the program running
     leak = True
     rss = []
-    for i in range(int(test_time * measurements_per_second)):
+    for _ in range(int(test_time * measurements_per_second)):
         time.sleep(1.0 / measurements_per_second)
         if proc.poll() is not None:
             print("------------------------------------------------")
@@ -131,8 +131,8 @@ def run_test(test_case):
         for i in range(len(rss)):
             memory = rss[i]
             print(f"{i / measurements_per_second}: {sizeof_fmt(memory)}")
-        if leak:
-            exit(1)
+    if leak:
+        exit(1)
 
 
 def has_memory_leak(rss):
@@ -140,9 +140,7 @@ def has_memory_leak(rss):
     if len(rss) <= measurement_count:
         # not enough measurements yet
         return True
-    differences = []
-    for i in range(1, len(rss)):
-        differences.append(rss[i] - rss[i - 1])
+    differences = [rss[i] - rss[i - 1] for i in range(1, len(rss))]
     max_memory = max(rss)
     sum_differences = sum(differences[-measurement_count:])
     return sum_differences > (max_memory * args.threshold_percentage + args.threshold_absolute)

@@ -3,7 +3,7 @@ import numpy
 
 
 def check_result(duckdb_cursor, value, type):
-    duckdb_cursor.execute("SELECT " + str(value) + "::" + type)
+    duckdb_cursor.execute(f"SELECT {str(value)}::{type}")
     results = duckdb_cursor.fetchall()
     assert results[0][0] == value
 

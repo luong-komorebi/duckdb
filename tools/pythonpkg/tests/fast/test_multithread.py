@@ -34,21 +34,22 @@ class DuckDBThreaded:
         for i in range(0, self.duckdb_insert_thread_count):
             self.threads.append(
                 threading.Thread(
-                    target=self.thread_function, args=(duckdb_conn, queue, self.pandas), name='duckdb_thread_' + str(i)
+                    target=self.thread_function,
+                    args=(duckdb_conn, queue, self.pandas),
+                    name=f'duckdb_thread_{str(i)}',
                 )
             )
 
         for i in range(0, len(self.threads)):
             self.threads[i].start()
-            if not if_all_true:
-                if queue.get():
-                    return_value = True
-            else:
+            if if_all_true:
                 if i == 0 and queue.get():
                     return_value = True
                 elif queue.get() and return_value:
                     return_value = True
 
+            elif queue.get():
+                return_value = True
         for i in range(0, len(self.threads)):
             self.threads[i].join()
 

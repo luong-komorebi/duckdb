@@ -21,12 +21,12 @@ with urllib.request.urlopen(request, context=ssl._create_unverified_context()) a
             release_rev = ref['object']['sha']
 
 if release_rev is None:
-    print("Could not find hash for tag %s" % sys.argv[1])
+    print(f"Could not find hash for tag {sys.argv[1]}")
     exit(-2)
 
-print("Using sha %s for release %s" % (release_rev, release_name))
+print(f"Using sha {release_rev} for release {release_name}")
 
-binurl = "http://download.duckdb.org/rev/%s/python/" % release_rev
+binurl = f"http://download.duckdb.org/rev/{release_rev}/python/"
 # assemble python files for release
 
 fdir = tempfile.mkdtemp()
@@ -40,13 +40,13 @@ with urllib.request.urlopen(request, context=ssl._create_unverified_context()) a
     for m in f_matches:
         if '.dev' in m[0]:
             continue
-        print("Downloading %s" % m[0])
-        url = binurl + '/' + m[0]
-        local_file = fdir + '/' + m[0]
+        print(f"Downloading {m[0]}")
+        url = f'{binurl}/{m[0]}'
+        local_file = f'{fdir}/{m[0]}'
         urllib.request.urlretrieve(url, local_file)
         upload_files.append(local_file)
 
-if len(upload_files) < 1:
+if not upload_files:
     print("Could not find any binaries")
     exit(-3)
 

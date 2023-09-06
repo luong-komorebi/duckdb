@@ -42,7 +42,7 @@ class TestDBConfig(object):
             con.execute('select * from df').fetchall()
         except:
             query_failed = True
-        assert query_failed == True
+        assert query_failed
 
     def test_unrecognized_option(self, duckdb_cursor):
         success = True
@@ -50,7 +50,7 @@ class TestDBConfig(object):
             con_regular = duckdb.connect(':memory:', config={'thisoptionisprobablynotthere': '42'})
         except:
             success = False
-        assert success == False
+        assert not success
 
     def test_incorrect_parameter(self, duckdb_cursor):
         success = True
@@ -58,4 +58,4 @@ class TestDBConfig(object):
             con_regular = duckdb.connect(':memory:', config={'default_null_order': '42'})
         except:
             success = False
-        assert success == False
+        assert not success

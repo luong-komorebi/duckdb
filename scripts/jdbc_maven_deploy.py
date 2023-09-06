@@ -44,7 +44,7 @@ if release_tag == 'main':
     last_tag = exec('git tag --sort=-committerdate').decode('utf8').split('\n')[0]
     re_result = version_regex.search(last_tag)
     if re_result is None:
-        raise ValueError("Could not parse last tag %s" % last_tag)
+        raise ValueError(f"Could not parse last tag {last_tag}")
     release_version = "%d.%d.0-SNAPSHOT" % (int(re_result.group(2)), int(re_result.group(3)) + 1)
     # orssh uses a different deploy url for snapshots yay
     deploy_url = 'https://oss.sonatype.org/content/repositories/snapshots/'
@@ -52,7 +52,7 @@ if release_tag == 'main':
 elif version_regex.match(release_tag):
     release_version = version_regex.search(release_tag).group(1)
 else:
-    print("Not running on %s" % release_tag)
+    print(f"Not running on {release_tag}")
     exit(0)
 
 jdbc_artifact_dir = sys.argv[2]
@@ -62,10 +62,10 @@ combine_builds = ['linux-amd64', 'osx-universal', 'windows-amd64', 'linux-aarch6
 
 staging_dir = tempfile.mkdtemp()
 
-binary_jar = '%s/duckdb_jdbc-%s.jar' % (staging_dir, release_version)
-pom = '%s/duckdb_jdbc-%s.pom' % (staging_dir, release_version)
-sources_jar = '%s/duckdb_jdbc-%s-sources.jar' % (staging_dir, release_version)
-javadoc_jar = '%s/duckdb_jdbc-%s-javadoc.jar' % (staging_dir, release_version)
+binary_jar = f'{staging_dir}/duckdb_jdbc-{release_version}.jar'
+pom = f'{staging_dir}/duckdb_jdbc-{release_version}.pom'
+sources_jar = f'{staging_dir}/duckdb_jdbc-{release_version}-sources.jar'
+javadoc_jar = f'{staging_dir}/duckdb_jdbc-{release_version}-javadoc.jar'
 
 pom_template = """
 <project>
@@ -131,19 +131,29 @@ pom_path = pathlib.Path(pom)
 pom_path.write_text(pom_template.replace("${VERSION}", release_version))
 
 # fatten up jar to add other binaries, start with first one
-shutil.copyfile(os.path.join(jdbc_artifact_dir, "java-" + combine_builds[0], "duckdb_jdbc.jar"), binary_jar)
+shutil.copyfile(
+    os.path.join(
+        jdbc_artifact_dir, f"java-{combine_builds[0]}", "duckdb_jdbc.jar"
+    ),
+    binary_jar,
+)
 for build in combine_builds[1:]:
-    old_jar = zipfile.ZipFile(os.path.join(jdbc_artifact_dir, "java-" + build, "duckdb_jdbc.jar"), 'r')
+    old_jar = zipfile.ZipFile(
+        os.path.join(jdbc_artifact_dir, f"java-{build}", "duckdb_jdbc.jar"),
+        'r',
+    )
     for zip_entry in old_jar.namelist():
         if zip_entry.startswith('libduckdb_java.so'):
             old_jar.extract(zip_entry, staging_dir)
-            exec("jar -uf %s -C %s %s" % (binary_jar, staging_dir, zip_entry))
+            exec(f"jar -uf {binary_jar} -C {staging_dir} {zip_entry}")
 
 javadoc_stage_dir = tempfile.mkdtemp()
 
-exec("javadoc -Xdoclint:-reference -d %s -sourcepath %s/src/main/java org.duckdb" % (javadoc_stage_dir, jdbc_root_path))
-exec("jar -cvf %s -C %s ." % (javadoc_jar, javadoc_stage_dir))
-exec("jar -cvf %s -C %s/src/main/java org" % (sources_jar, jdbc_root_path))
+exec(
+    f"javadoc -Xdoclint:-reference -d {javadoc_stage_dir} -sourcepath {jdbc_root_path}/src/main/java org.duckdb"
+)
+exec(f"jar -cvf {javadoc_jar} -C {javadoc_stage_dir} .")
+exec(f"jar -cvf {sources_jar} -C {jdbc_root_path}/src/main/java org")
 
 # make sure all files exist before continuing
 if (
@@ -155,7 +165,7 @@ if (
     raise ValueError('could not create all required files')
 
 # run basic tests, it should now work on whatever platform this is
-exec("java -cp %s org.duckdb.test.TestDuckDBJDBC" % binary_jar)
+exec(f"java -cp {binary_jar} org.duckdb.test.TestDuckDBJDBC")
 
 # now sign and upload everything
 # for this to work, you must have entry in ~/.m2/settings.xml:
@@ -182,10 +192,16 @@ for jar in [binary_jar, sources_jar, javadoc_jar]:
     shutil.copyfile(jar, os.path.join(results_dir, os.path.basename(jar)))
 
 print("JARs created, uploading (this can take a while!)")
-deploy_cmd_prefix = 'mvn gpg:sign-and-deploy-file -Durl=%s -DrepositoryId=ossrh' % deploy_url
-exec("%s -DpomFile=%s -Dfile=%s" % (deploy_cmd_prefix, pom, binary_jar))
-exec("%s -Dclassifier=sources -DpomFile=%s -Dfile=%s" % (deploy_cmd_prefix, pom, sources_jar))
-exec("%s -Dclassifier=javadoc -DpomFile=%s -Dfile=%s" % (deploy_cmd_prefix, pom, javadoc_jar))
+deploy_cmd_prefix = (
+    f'mvn gpg:sign-and-deploy-file -Durl={deploy_url} -DrepositoryId=ossrh'
+)
+exec(f"{deploy_cmd_prefix} -DpomFile={pom} -Dfile={binary_jar}")
+exec(
+    f"{deploy_cmd_prefix} -Dclassifier=sources -DpomFile={pom} -Dfile={sources_jar}"
+)
+exec(
+    f"{deploy_cmd_prefix} -Dclassifier=javadoc -DpomFile={pom} -Dfile={javadoc_jar}"
+)
 
 
 if not is_release:
@@ -197,8 +213,11 @@ print("Close/Release steps")
 os.environ["MAVEN_OPTS"] = '--add-opens=java.base/java.util=ALL-UNNAMED'
 
 # this list has horrid output, lets try to parse. What we want starts with orgduckdb- and then a number
-repo_id = re.search(r'(orgduckdb-\d+)', exec("mvn -f %s nexus-staging:rc-list" % (pom)).decode('utf8')).groups()[0]
-exec("mvn -f %s nexus-staging:rc-close -DstagingRepositoryId=%s" % (pom, repo_id))
-exec("mvn -f %s nexus-staging:rc-release -DstagingRepositoryId=%s" % (pom, repo_id))
+repo_id = re.search(
+    r'(orgduckdb-\d+)',
+    exec(f"mvn -f {pom} nexus-staging:rc-list").decode('utf8'),
+).groups()[0]
+exec(f"mvn -f {pom} nexus-staging:rc-close -DstagingRepositoryId={repo_id}")
+exec(f"mvn -f {pom} nexus-staging:rc-release -DstagingRepositoryId={repo_id}")
 
 print("Done?")

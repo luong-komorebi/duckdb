@@ -70,8 +70,7 @@ def benchmark_queries(benchmark_name, con, queries):
         t = 0.0
         for i, q in enumerate(queries):
             start = time.time()
-            rel = con.sql(q)
-            if rel:
+            if rel := con.sql(q):
                 if benchmark_name.startswith('pandas'):
                     if verbose:
                         print(f"Fetching '{q}' as a DataFrame")
@@ -84,12 +83,11 @@ def benchmark_queries(benchmark_name, con, queries):
                     if verbose:
                         print(f"Fetching '{q}' as native Python lists/tuples")
                     df_result = rel.fetchall()
-            else:
-                if verbose:
-                    print(f"Query '{q}' did not produce output")
+            elif verbose:
+                print(f"Query '{q}' did not produce output")
             end = time.time()
-            query_time = float(end - start)
             if verbose:
+                query_time = float(end - start)
                 print(f"Q{str(i).ljust(len(str(nruns)), ' ')}: {query_time}")
             t += float(end - start)
             if verbose:
@@ -123,20 +121,16 @@ def run_dataload(con, type):
 
 def run_tpch(con, prefix):
     benchmark_name = f"{prefix}tpch"
-    queries = []
-    for i in range(1, TPCH_NQUERIES + 1):
-        queries.append(f'PRAGMA tpch({i})')
+    queries = [f'PRAGMA tpch({i})' for i in range(1, TPCH_NQUERIES + 1)]
     benchmark_queries(benchmark_name, con, queries)
 
 
 if out_file is not None:
     f = open(out_file, 'w+')
 
-# pandas scans
-data_frames = {}
-for table in tables:
-    data_frames[table] = main_con.execute(f"SELECT * FROM {table}").df()
-
+data_frames = {
+    table: main_con.execute(f"SELECT * FROM {table}").df() for table in tables
+}
 df_con = open_connection()
 for table in tables:
     df_con.register(table, data_frames[table])
@@ -144,11 +138,9 @@ for table in tables:
 run_dataload(main_con, "pandas")
 run_tpch(df_con, "pandas_")
 
-# arrow scans
-arrow_tables = {}
-for table in tables:
-    arrow_tables[table] = pa.Table.from_pandas(data_frames[table])
-
+arrow_tables = {
+    table: pa.Table.from_pandas(data_frames[table]) for table in tables
+}
 arrow_con = open_connection()
 for table in tables:
     arrow_con.register(table, arrow_tables[table])

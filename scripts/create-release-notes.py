@@ -25,18 +25,18 @@ def extract(link_header):
 
 
 def gh_api(suburl, full_url=''):
-    if full_url == '':
-        url = api_url + suburl
-    else:
-        url = full_url
-    headers = {"Content-Type": "application/json", 'Authorization': 'token ' + token}
+    url = api_url + suburl if full_url == '' else full_url
+    headers = {
+        "Content-Type": "application/json",
+        'Authorization': f'token {token}',
+    }
 
     req = urllib.request.Request(url, b'', headers)
     req.get_method = lambda: 'GET'
     next_link = None
     try:
         resp = urllib.request.urlopen(req)
-        if not resp.getheader("Link") is None:
+        if resp.getheader("Link") is not None:
             link_data = extract(resp.getheader("Link"))
             if "next" in link_data:
                 next_link = link_data["next"]
@@ -51,7 +51,7 @@ def gh_api(suburl, full_url=''):
 
 
 # get time of tag
-old_release = gh_api('releases/tags/%s' % sys.argv[1])
+old_release = gh_api(f'releases/tags/{sys.argv[1]}')
 print(old_release["published_at"])
 
 pulls = gh_api('pulls?base=main&state=closed')
@@ -60,4 +60,4 @@ for p in pulls:
         continue
     if p["merged_at"] < old_release["published_at"]:
         continue
-    print(" - #%s: %s" % (p["number"], p["title"]))
+    print(f' - #{p["number"]}: {p["title"]}')

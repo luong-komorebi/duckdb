@@ -6,7 +6,7 @@ from conftest import NumpyPandas, ArrowPandas
 def is_dunder_method(method_name: str) -> bool:
     if len(method_name) < 4:
         return False
-    return method_name[:2] == '__' and method_name[:-3:-1] == '__'
+    return method_name.startswith('__') and method_name[:-3:-1] == '__'
 
 
 # This file contains tests for DuckDBPyConnection methods,
@@ -103,8 +103,8 @@ class TestDuckDBConnection(object):
         duckdb.execute("Create Table test (a integer)")
 
         for i in range(1024):
-            for j in range(2):
-                duckdb.execute("Insert Into test values ('" + str(i) + "')")
+            for _ in range(2):
+                duckdb.execute(f"Insert Into test values ('{str(i)}')")
         duckdb.execute("Insert Into test values ('5000')")
         duckdb.execute("Insert Into test values ('6000')")
         sql = '''

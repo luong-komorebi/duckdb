@@ -31,7 +31,7 @@ class TestArrowRecordBatchReader(object):
             format="parquet",
         )
 
-        batches = [r for r in userdata_parquet_dataset.to_batches()]
+        batches = list(userdata_parquet_dataset.to_batches())
         reader = pyarrow.dataset.Scanner.from_batches(batches, schema=userdata_parquet_dataset.schema).to_reader()
 
         rel = duckdb_conn.from_arrow(reader)
@@ -62,7 +62,7 @@ class TestArrowRecordBatchReader(object):
             format="parquet",
         )
 
-        batches = [r for r in userdata_parquet_dataset.to_batches()]
+        batches = list(userdata_parquet_dataset.to_batches())
         reader = pyarrow.dataset.Scanner.from_batches(batches, schema=userdata_parquet_dataset.schema).to_reader()
 
         assert (
@@ -96,7 +96,7 @@ class TestArrowRecordBatchReader(object):
             format="parquet",
         )
 
-        batches = [r for r in userdata_parquet_dataset.to_batches()]
+        batches = list(userdata_parquet_dataset.to_batches())
         reader = pyarrow.dataset.Scanner.from_batches(batches, schema=userdata_parquet_dataset.schema).to_reader()
 
         duckdb_conn.register("bla", reader)
@@ -129,7 +129,7 @@ class TestArrowRecordBatchReader(object):
             format="parquet",
         )
 
-        batches = [r for r in userdata_parquet_dataset.to_batches()]
+        batches = list(userdata_parquet_dataset.to_batches())
         reader = pyarrow.dataset.Scanner.from_batches(batches, schema=userdata_parquet_dataset.schema).to_reader()
 
         rel = duckdb.from_arrow(reader)

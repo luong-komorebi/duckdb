@@ -34,10 +34,7 @@ class TestScanNumpy(object):
         res = duckdb.sql("select * from z").fetchall()
         assert res == [('zzz', 1), ('xxx', 2)]
 
-        # test ndarray with dtype = object (python dict)
-        z = []
-        for i in range(3):
-            z.append({str(3 - i): i})
+        z = [{str(3 - i): i} for i in range(3)]
         z = np.array(z)
         res = duckdb.sql("select * from z").fetchall()
         assert res == [

@@ -26,16 +26,15 @@ class ModifiedMemoryFileSystem(MemoryFileSystem):
 
     def info(self, path, **kwargs):
         path = self._strip_protocol(path)
-        if path in self.store:
-            filelike = self.store[path]
-            return {
-                "name": path,
-                "size": getattr(filelike, "size", 0),
-                "type": "file",
-                "created": getattr(filelike, "created", None),
-            }
-        else:
+        if path not in self.store:
             raise FileNotFoundError(path)
+        filelike = self.store[path]
+        return {
+            "name": path,
+            "size": getattr(filelike, "size", 0),
+            "type": "file",
+            "created": getattr(filelike, "created", None),
+        }
 
     def _open(
         self,
@@ -48,8 +47,7 @@ class ModifiedMemoryFileSystem(MemoryFileSystem):
     ):
         path = self._strip_protocol(path)
         if path in self.store:
-            f = self.store[path]
-            return f
+            return self.store[path]
         else:
             raise FileNotFoundError(path)
 

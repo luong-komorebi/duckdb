@@ -36,7 +36,7 @@ def parse_args():
             benchmark_dir = arg.replace("--dir=", "")
         else:
             print_usage()
-    if old == None or new == None or benchmark_dir == None:
+    if old is None or new is None or benchmark_dir is None:
         print_usage()
     return old, new, benchmark_dir
 

@@ -22,8 +22,6 @@ class TestQueryInterruption(object):
         try:
             res = con.execute('select count(*) from range(1000000000)').fetchall()
         except RuntimeError:
-            # If this is not reached, we could not cancel the query before it completed
-            # indicating that the query interruption functionality is broken
-            assert True
+            pass
         except KeyboardInterrupt:
             pytest.fail()

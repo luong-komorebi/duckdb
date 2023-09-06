@@ -38,7 +38,7 @@ import package_build
 # standardise paths
 source_list = [os.path.relpath(x, target_dir) if os.path.isabs(x) else x for x in source_list]
 include_list = [os.path.join(src_dir_name, x) for x in include_list]
-define_list = ['BUILD_{}_EXTENSION'.format(ext.upper()) for ext in extensions]
+define_list = [f'BUILD_{ext.upper()}_EXTENSION' for ext in extensions]
 # write Package.swift
 os.chdir(base_dir)
 
@@ -47,9 +47,9 @@ header_file_src = os.path.join(src_dir, 'src', 'include', 'duckdb.h')
 header_file_dest = os.path.join(includes_dir, 'duckdb.h')
 shutil.copyfile(header_file_src, header_file_dest)
 
-source_list_strs = ['"' + x + '",' for x in source_list]
-include_list_strs = ['.headerSearchPath("' + x + '"),' for x in include_list]
-define_list_strs = ['.define("' + x + '"),' for x in define_list]
+source_list_strs = [f'"{x}",' for x in source_list]
+include_list_strs = [f'.headerSearchPath("{x}"),' for x in include_list]
+define_list_strs = [f'.define("{x}"),' for x in define_list]
 src_line_prefix = '\n        '  # indents eight spaces
 
 content = {

@@ -36,5 +36,5 @@ def test_pytorch():
 
     with pytest.raises(TypeError, match="can't convert"):
         con = duckdb.connect()
-        con.execute(f"create table t( a UINTEGER)")
+        con.execute("create table t( a UINTEGER)")
         duck_torch = con.sql("select * from t").torch()

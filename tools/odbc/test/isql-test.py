@@ -7,9 +7,7 @@ import shutil
 if len(sys.argv) < 2:
     raise Exception('need shell binary as parameter')
 
-extra_parameter = ""
-if len(sys.argv) == 3:
-    extra_parameter = sys.argv[2]
+extra_parameter = sys.argv[2] if len(sys.argv) == 3 else ""
 
 
 def test_exception(command, input, stdout, stderr, errmsg):
@@ -67,12 +65,9 @@ SELECT * FROM people;""",
     out=("1|Mark\n" "2|Hannes"),
 )
 
-range_out = ""
-for i in range(10000):
-    if i < 9999:
-        range_out += str(i) + "\n"
-    else:
-        range_out += str(i)
+range_out = "".join(
+    str(i) + "\n" if i < 9999 else str(i) for i in range(10000)
+)
 test("SELECT * FROM range(10000);", out=range_out)
 
 

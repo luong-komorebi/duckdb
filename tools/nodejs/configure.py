@@ -20,7 +20,7 @@ scripts_dir = 'scripts'
 sys.path.append(scripts_dir)
 import package_build
 
-defines = ['DUCKDB_EXTENSION_{}_LINKED'.format(ext.upper()) for ext in extensions]
+defines = [f'DUCKDB_EXTENSION_{ext.upper()}_LINKED' for ext in extensions]
 
 if os.environ.get('DUCKDB_NODE_BUILD_CACHE') == '1' and os.path.isfile(cache_file):
     with open(cache_file, 'rb') as f:
@@ -112,21 +112,21 @@ def replace_entries(node, replacement_map):
                 node.remove(key)
                 node += replacement_map[key]
         for entry in node:
-            if type(entry) == type([]) or type(entry) == type({}):
+            if type(entry) in [type([]), type({})]:
                 replace_entries(entry, replacement_map)
     if type(node) == type({}):
         for key in node.keys():
             replace_entries(node[key], replacement_map)
 
 
-replacement_map = {}
-replacement_map['${SOURCE_FILES}'] = source_list
-replacement_map['${INCLUDE_FILES}'] = include_list
-replacement_map['${DEFINES}'] = defines
-replacement_map['${LIBRARY_FILES}'] = libraries
-replacement_map['${CFLAGS}'] = cflags
-replacement_map['${WINDOWS_OPTIONS}'] = windows_options
-
+replacement_map = {
+    '${SOURCE_FILES}': source_list,
+    '${INCLUDE_FILES}': include_list,
+    '${DEFINES}': defines,
+    '${LIBRARY_FILES}': libraries,
+    '${CFLAGS}': cflags,
+    '${WINDOWS_OPTIONS}': windows_options,
+}
 replace_entries(input_json, replacement_map)
 
 with open(gyp_out, 'w+') as f:

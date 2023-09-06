@@ -10,13 +10,13 @@ def test_generated_stubs():
 
     stubtest.test_stubs(stubtest.parse_options(['duckdb', '--mypy-config-file', MYPY_INI_PATH]))
 
-    broken_stubs = [
+    if broken_stubs := [
         error.get_description()
         for error in stubtest.test_module('duckdb')
-        if not any(skip in error.get_description() for skip in skip_stubs_errors)
-    ]
-
-    if broken_stubs:
+        if all(
+            skip not in error.get_description() for skip in skip_stubs_errors
+        )
+    ]:
         print("Stubs must be updated, either add them to skip_stubs_errors or update __init__.pyi accordingly")
         print(broken_stubs)
 

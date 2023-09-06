@@ -42,7 +42,7 @@ def parsever(ele):
 # get a list of all pre-releases
 release_list = resp_json["releases"]
 for ele in release_list:
-    if not ".dev" in ele:
+    if ".dev" not in ele:
         continue
 
     (major, dev) = parsever(ele)
@@ -102,11 +102,15 @@ delete_crsf_token = get_token("https://pypi.org/manage/project/duckdb/releases/"
 delete_headers = {"Referer": "https://pypi.org/manage/project/duckdb/releases/"}
 
 for rev in to_delete:
-    print("Deleting %s" % rev)
+    print(f"Deleting {rev}")
 
     try:
         delete_data = urllib.parse.urlencode({"confirm_delete_version": rev, "csrf_token": delete_crsf_token}).encode()
-        call("https://pypi.org/manage/project/duckdb/release/%s/" % rev, delete_data, delete_headers)
+        call(
+            f"https://pypi.org/manage/project/duckdb/release/{rev}/",
+            delete_data,
+            delete_headers,
+        )
     except Exception as e:
         print(f"Failed to delete {rev}")
         print(e)

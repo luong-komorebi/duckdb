@@ -40,7 +40,7 @@ class DataFrameReader:
         rel = None
         if format:
             format = format.lower()
-            if format == 'csv' or format == 'tsv':
+            if format in ['csv', 'tsv']:
                 rel = self.session.conn.read_csv(path)
             elif format == 'json':
                 rel = self.session.conn.read_json(path)
@@ -112,8 +112,6 @@ class DataFrameReader:
         if nanValue:
             raise ConnectionAbortedError
         if positiveInf:
-            raise ConnectionAbortedError
-        if negativeInf:
             raise ConnectionAbortedError
         if negativeInf:
             raise ConnectionAbortedError

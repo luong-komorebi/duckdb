@@ -20,16 +20,16 @@ if len(arguments) <= 2:
     if ".json" in input:
         output = input.replace(".json", ".html")
     else:
-        output = input + ".html"
+        output = f"{input}.html"
 else:
     output = arguments[2]
 
 open_output = True
 if len(arguments) >= 4:
     open_arg = arguments[3].lower().replace('open=', '')
-    if open_arg == "1" or open_arg == "true":
+    if open_arg in ["1", "true"]:
         open_output = True
-    elif open_arg == "0" or open_arg == "false":
+    elif open_arg in ["0", "false"]:
         open_output = False
     else:
         print("Incorrect input for open_output, expected TRUE or FALSE")

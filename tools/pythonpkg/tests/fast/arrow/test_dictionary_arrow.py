@@ -128,8 +128,7 @@ class TestArrowDictionary(object):
             return
         indices_list = [None, 1, None, 1, 2, 1, 0]
         dictionary = pa.array([10, 100, 100], type=pyarrow.uint8())
-        index_types = []
-        index_types.append(pa.array(indices_list * 10000, type=pyarrow.uint8()))
+        index_types = [pa.array(indices_list * 10000, type=pyarrow.uint8())]
         index_types.append(pa.array(indices_list * 10000, type=pyarrow.uint16()))
         index_types.append(pa.array(indices_list * 10000, type=pyarrow.uint32()))
         index_types.append(pa.array(indices_list * 10000, type=pyarrow.uint64()))

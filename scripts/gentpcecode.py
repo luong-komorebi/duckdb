@@ -208,9 +208,7 @@ with open(os.path.join(TPCE_DIR, 'include/main/TableRows.h'), 'r') as f:
 
 def get_tablename(name):
     name = name.title().replace(' ', '')
-    if name == 'NewsXref':
-        return 'NewsXRef'
-    return name
+    return 'NewsXRef' if name == 'NewsXref' else name
 
 
 for table in tables.keys():
@@ -236,7 +234,9 @@ public:
         entry = collist[i]
         name = entry[0].upper()
         tpe = entry[1]
-        if tpe == "TypeId::BIGINT":
+        if tpe == 'TypeId::BOOLEAN':
+            funcname = "bool"
+        elif tpe == "TypeId::BIGINT":
             funcname = "bigint"
         elif tpe == "TypeId::DECIMAL":
             funcname = "double"
@@ -244,15 +244,10 @@ public:
             funcname = "value"
         elif tpe == "TypeId::TIMESTAMP":
             funcname = "timestamp"
-        elif tpe == 'TypeId::BOOLEAN':
-            funcname = "bool"
         elif tpe == "TypeId::VARCHAR":
-            if entry[2]:
-                funcname = "char"
-            else:
-                funcname = "string"
+            funcname = "char" if entry[2] else "string"
         else:
-            print("Unknown type " + tpe)
+            print(f"Unknown type {tpe}")
             exit(1)
         source.write("\t\tappend_%s(info, next_record.%s);" % (funcname, name))
         if i != len(collist) - 1:
@@ -298,10 +293,7 @@ for table in tables.keys():
     for i in range(len(columns)):
         column = columns[i]
         str += '\t    "' + column[0] + " " + column[3]
-        if i == len(columns) - 1:
-            str += ')";'
-        else:
-            str += ',"'
+        str += ')";' if i == len(columns) - 1 else ',"'
         str += "\n"
     str += "}\n\n"
     source.write(str)

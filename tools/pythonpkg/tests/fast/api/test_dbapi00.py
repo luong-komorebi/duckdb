@@ -43,7 +43,9 @@ class TestSimpleDBAPI(object):
         duckdb_cursor.execute('select * from integers')
         list_of_results = []
         arraysize = 3
-        expected_iteration_count = 1 + (int)(truth_value / arraysize) + (1 if truth_value % arraysize else 0)
+        expected_iteration_count = (
+            1 + truth_value // arraysize + (1 if truth_value % arraysize else 0)
+        )
         iteration_count = 0
         print("truth_value:", truth_value)
         print("expected_iteration_count:", expected_iteration_count)

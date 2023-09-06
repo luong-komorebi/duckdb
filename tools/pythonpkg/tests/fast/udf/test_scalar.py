@@ -75,7 +75,7 @@ class TestScalarUDF(object):
 
         # NULLs
         res = con.execute(f"select res from (select ?, test(NULL::{str(type)}) as res)", [value]).fetchall()
-        assert res[0][0] == None
+        assert res[0][0] is None
 
         # Multiple chunks
         size = duckdb.__standard_vector_size__ * 3
@@ -180,7 +180,7 @@ class TestScalarUDF(object):
         con.create_function('return_pd_nan', return_pd_nan, None, duckdb_type, null_handling='SPECIAL', type=udf_type)
 
         res = con.sql('select return_pd_nan()').fetchall()
-        assert res[0][0] == None
+        assert res[0][0] is None
 
     def test_side_effects(self):
         def count() -> int:
@@ -207,10 +207,9 @@ class TestScalarUDF(object):
         def return_np_nan():
             if udf_type == 'native':
                 return np.nan
-            else:
-                import pyarrow as pa
+            import pyarrow as pa
 
-                return pa.chunked_array([[np.nan]], type=pa.float64())
+            return pa.chunked_array([[np.nan]], type=pa.float64())
 
         con = duckdb.connect()
         con.create_function('return_np_nan', return_np_nan, None, duckdb_type, null_handling='SPECIAL', type=udf_type)
@@ -226,10 +225,9 @@ class TestScalarUDF(object):
 
             if udf_type == 'native':
                 return cmath.nan
-            else:
-                import pyarrow as pa
+            import pyarrow as pa
 
-                return pa.chunked_array([[cmath.nan]], type=pa.float64())
+            return pa.chunked_array([[cmath.nan]], type=pa.float64())
 
         con = duckdb.connect()
         con.create_function(
@@ -270,16 +268,15 @@ class TestScalarUDF(object):
         def return_null():
             if udf_type == 'native':
                 return None
-            else:
-                import pyarrow as pa
+            import pyarrow as pa
 
-                return pa.nulls(1)
+            return pa.nulls(1)
 
         con = duckdb.connect()
         con.create_function('return_null', return_null, None, data_type, null_handling='special', type=udf_type)
         rel = con.sql('select return_null() as x')
         assert rel.types[0] == data_type
-        assert rel.fetchall()[0][0] == None
+        assert rel.fetchall()[0][0] is None
 
     def test_udf_transaction_interaction(self):
         def func(x: int) -> int:

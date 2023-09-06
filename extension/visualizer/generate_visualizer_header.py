@@ -23,10 +23,7 @@ def get_byte_array(fpath, add_null_terminator=True):
     result_text = ""
     first = True
     for byte in text:
-        if first:
-            result_text += str(byte)
-        else:
-            result_text += ", " + str(byte)
+        result_text += str(byte) if first else f", {str(byte)}"
         first = False
     if add_null_terminator:
         result_text += ", 0"
@@ -34,8 +31,7 @@ def get_byte_array(fpath, add_null_terminator=True):
 
 
 def write_file(fname, varname):
-    result = "const uint8_t %s[] = {" % (varname,) + get_byte_array(fname) + "};\n"
-    return result
+    return "const uint8_t %s[] = {" % (varname,) + get_byte_array(fname) + "};\n"
 
 
 def create_visualizer_header():

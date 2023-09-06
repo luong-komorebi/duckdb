@@ -58,11 +58,13 @@ def try_compilation(fpath, cache):
         'clang++ -std=c++11 -Wno-deprecated -Wno-writable-strings -S -MMD -MF dependencies.d -o deps.s '
         + fpath
         + ' '
-        + ' '.join(["-I" + x for x in amalgamation.include_paths])
+        + ' '.join([f"-I{x}" for x in amalgamation.include_paths])
     )
     ret = os.system(cmd)
     if ret != 0:
-        raise Exception('Failed compilation of file "' + fpath + '"!\n Command: ' + cmd)
+        raise Exception(
+            f'Failed compilation of file "{fpath}' + '"!\n Command: ' + cmd
+        )
     cache[fpath] = True
     with open(cache_file, 'wb') as cf:
         pickle.dump(cache, cf)

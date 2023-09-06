@@ -47,17 +47,14 @@ for symbol in res.stdout.decode('utf-8').split('\n'):
     if symbol.endswith(' U 0 0'):  # undefined because dynamic linker
         continue
 
-    is_whitelisted = False
-    for entry in whitelist:
-        if entry in symbol:
-            is_whitelisted = True
+    is_whitelisted = any(entry in symbol for entry in whitelist)
     if is_whitelisted:
         continue
 
     culprits.append(symbol)
 
 
-if len(culprits) > 0:
+if culprits:
     print("Found leaked symbols. Either white-list above or change visibility:")
     for symbol in culprits:
         print(symbol)

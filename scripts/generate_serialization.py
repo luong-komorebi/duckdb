@@ -106,10 +106,8 @@ def replace_pointer(type):
 
 
 def get_serialize_element(property_name, property_id, property_key, property_type, is_optional, pointer_type):
-    write_method = 'WriteProperty'
     assignment = '.' if pointer_type == 'none' else '->'
-    if is_optional:
-        write_method = 'WriteOptionalProperty'
+    write_method = 'WriteOptionalProperty' if is_optional else 'WriteProperty'
     return (
         serialize_element.replace('${PROPERTY_NAME}', property_name)
         .replace('${PROPERTY_ID}', str(property_id))
@@ -122,10 +120,8 @@ def get_serialize_element(property_name, property_id, property_key, property_typ
 def get_deserialize_element_template(
     template, property_name, property_key, property_id, property_type, is_optional, pointer_type
 ):
-    read_method = 'ReadProperty'
     assignment = '.' if pointer_type == 'none' else '->'
-    if is_optional:
-        read_method = 'ReadOptionalProperty'
+    read_method = 'ReadOptionalProperty' if is_optional else 'ReadProperty'
     return (
         template.replace('${PROPERTY_NAME}', property_name)
         .replace('${PROPERTY_KEY}', property_key)
@@ -158,7 +154,11 @@ def get_return_value(pointer_type, class_name):
 
 def generate_constructor(pointer_type, class_name, constructor_parameters):
     if pointer_type == 'none':
-        params = '' if len(constructor_parameters) == 0 else '(' + constructor_parameters + ')'
+        params = (
+            ''
+            if len(constructor_parameters) == 0
+            else f'({constructor_parameters})'
+        )
         return f'\t{class_name} result{params};\n'
     return f'\tauto result = duckdb::{pointer_type}<{class_name}>(new {class_name}({constructor_parameters}));\n'
 
@@ -304,7 +304,7 @@ def generate_base_class_code(base_class):
         base_class_deserialize += get_deserialize_element(
             entry.deserialize_property, entry.name, entry.id, type_name, is_optional, base_class.pointer_type
         )
-    expressions = [x for x in base_class.children.items()]
+    expressions = list(base_class.children.items())
     expressions = sorted(expressions, key=lambda x: x[0])
 
     # set parameters
@@ -415,7 +415,7 @@ def generate_class_code(class_entry):
                         constructor_parameters += ", "
                     type_name = replace_pointer(entry.type)
                     if requires_move(type_name) and not is_reference:
-                        constructor_parameters += 'std::move(' + entry.deserialize_property + ')'
+                        constructor_parameters += f'std::move({entry.deserialize_property})'
                     else:
                         constructor_parameters += entry.deserialize_property
                     found = True
@@ -461,14 +461,14 @@ def generate_class_code(class_entry):
         is_optional = entry.optional
         if is_pointer(entry.type):
             if not is_optional:
-                write_property_name = '*' + entry.serialize_property
+                write_property_name = f'*{entry.serialize_property}'
         elif is_optional:
             raise Exception(
                 f"Optional can only be combined with pointers (in {class_entry.name}, type {entry.type}, member {entry.type})"
             )
         deserialize_template_str = deserialize_element_class
         if entry.base:
-            write_property_name = f"({entry.base} &)" + write_property_name
+            write_property_name = f"({entry.base} &){write_property_name}"
             deserialize_template_str = deserialize_element_class_base.replace(
                 '${BASE_PROPERTY}', entry.base.replace('*', '')
             ).replace('${DERIVED_PROPERTY}', entry.type.replace('*', ''))

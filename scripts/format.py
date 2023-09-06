@@ -156,10 +156,10 @@ def file_is_ignored(full_path):
     if os.path.basename(full_path) in ignored_files:
         return True
     dirnames = os.path.sep.join(full_path.split(os.path.sep)[:-1])
-    for ignored_directory in ignored_directories:
-        if ignored_directory in dirnames:
-            return True
-    return False
+    return any(
+        ignored_directory in dirnames
+        for ignored_directory in ignored_directories
+    )
 
 
 def can_format_file(full_path):
@@ -170,24 +170,13 @@ def can_format_file(full_path):
     # check ignored files
     if file_is_ignored(full_path):
         return False
-    found = False
-    # check file extension
-    for ext in extensions:
-        if full_path.endswith(ext):
-            found = True
-            break
+    found = any(full_path.endswith(ext) for ext in extensions)
     if not found:
         return False
-    # now check file directory
-    for dname in formatted_directories:
-        if full_path.startswith(dname):
-            return True
-    return False
+    return any(full_path.startswith(dname) for dname in formatted_directories)
 
 
-action = "Formatting"
-if check_only:
-    action = "Checking"
+action = "Checking" if check_only else "Formatting"
 
 
 def get_changed_files(revision):
@@ -204,10 +193,10 @@ def get_changed_files(revision):
 
 
 if os.path.isfile(revision):
-    print(action + " individual file: " + revision)
+    print(f"{action} individual file: {revision}")
     changed_files = [revision]
 elif os.path.isdir(revision):
-    print(action + " files in directory: " + revision)
+    print(f"{action} files in directory: {revision}")
     changed_files = [os.path.join(revision, x) for x in os.listdir(revision)]
 
     print("Changeset:")
@@ -217,7 +206,7 @@ elif not format_all:
     if revision == 'main':
         # fetch new changes when comparing to the master
         os.system("git fetch origin main:main")
-    print(action + " since branch or revision: " + revision)
+    print(f"{action} since branch or revision: {revision}")
     changed_files = get_changed_files(revision)
     if len(changed_files) == 0:
         print("No changed files found!")
@@ -227,7 +216,7 @@ elif not format_all:
     for fname in changed_files:
         print(fname)
 else:
-    print(action + " all files")
+    print(f"{action} all files")
 
 if confirm and not check_only:
     print("The files listed above will be reformatted.")
@@ -259,7 +248,7 @@ base_dir = os.path.join(os.getcwd(), 'src/include')
 
 def get_formatted_text(f, full_path, directory, ext):
     if not can_format_file(full_path):
-        print("Eek, cannot format file " + full_path + " but attempted to format anyway")
+        print(f"Eek, cannot format file {full_path} but attempted to format anyway")
         exit(1)
     if f == 'list.hpp':
         # fill in list file
@@ -271,26 +260,26 @@ def get_formatted_text(f, full_path, directory, ext):
         ]
         file_list = [x.replace('src/include/', '') for x in file_list]
         file_list.sort()
-        result = ""
-        for x in file_list:
-            result += '#include "%s"\n' % (x)
-        return result
-
+        return "".join('#include "%s"\n' % (x) for x in file_list)
     if ext == ".hpp" and directory.startswith("src/include"):
         with open_utf8(full_path, 'r') as f:
             lines = f.readlines()
 
         # format header in files
-        header_middle = "// " + os.path.relpath(full_path, base_dir) + "\n"
+        header_middle = f"// {os.path.relpath(full_path, base_dir)}" + "\n"
         text = header_top + header_middle + header_bottom
         is_old_header = True
         for line in lines:
-            if not (line.startswith("//") or line.startswith("\n")) and is_old_header:
+            if (
+                not line.startswith("//")
+                and not line.startswith("\n")
+                and is_old_header
+            ):
                 is_old_header = False
             if not is_old_header:
                 text += line
 
-    if ext == '.test' or ext == '.test_slow' or ext == '.test_coverage' or ext == '.benchmark':
+    if ext in ['.test', '.test_slow', '.test_coverage', '.benchmark']:
         f = open_utf8(full_path, 'r')
         lines = f.readlines()
         f.close()
@@ -298,15 +287,17 @@ def get_formatted_text(f, full_path, directory, ext):
         found_name = False
         found_group = False
         group_name = full_path.split('/')[-2]
-        new_path_line = '# name: ' + full_path + '\n'
-        new_group_line = '# group: [' + group_name + ']' + '\n'
+        new_path_line = f'# name: {full_path}' + '\n'
+        new_group_line = f'# group: [{group_name}]' + '\n'
         found_diff = False
         # Find description.
         found_description = False
         for line in lines:
             if line.lower().startswith('# description:') or line.lower().startswith('#description:'):
                 if found_description:
-                    print("Error formatting file " + full_path + ", multiple lines starting with # description found")
+                    print(
+                        f"Error formatting file {full_path}, multiple lines starting with # description found"
+                    )
                     exit(1)
                 found_description = True
                 new_description_line = '# description: ' + line.split(':', 1)[1].strip() + '\n'
@@ -320,8 +311,7 @@ def get_formatted_text(f, full_path, directory, ext):
         header = [new_path_line]
         if found_description:
             header.append(new_description_line)
-        header.append(new_group_line)
-        header.append('\n')
+        header.extend((new_group_line, '\n'))
         return ''.join(header + lines)
     proc_command = format_commands[ext].split(' ') + [full_path]
     proc = subprocess.Popen(
@@ -331,7 +321,7 @@ def get_formatted_text(f, full_path, directory, ext):
     stderr = proc.stderr.read().decode('utf8')
     if len(stderr) > 0:
         print(os.getcwd())
-        print("Failed to format file " + full_path)
+        print(f"Failed to format file {full_path}")
         print(' '.join(proc_command))
         print(stderr)
         exit(1)
@@ -341,9 +331,7 @@ def get_formatted_text(f, full_path, directory, ext):
 
 
 def file_is_generated(text):
-    if '// This file is automatically generated by scripts/' in text:
-        return True
-    return False
+    return '// This file is automatically generated by scripts/' in text
 
 
 def format_file(f, full_path, directory, ext):
@@ -363,21 +351,19 @@ def format_file(f, full_path, directory, ext):
         old_lines = [x for x in old_lines if '...' not in x]
         new_lines = [x for x in new_lines if '...' not in x]
         diff_result = difflib.unified_diff(old_lines, new_lines)
-        total_diff = ""
-        for diff_line in diff_result:
-            total_diff += diff_line + "\n"
+        total_diff = "".join(diff_line + "\n" for diff_line in diff_result)
         total_diff = total_diff.strip()
 
-        if len(total_diff) > 0:
+        if total_diff != "":
             print("----------------------------------------")
             print("----------------------------------------")
-            print("Found differences in file " + full_path)
+            print(f"Found differences in file {full_path}")
             print("----------------------------------------")
             print("----------------------------------------")
             print(total_diff)
             difference_files.append(full_path)
     else:
-        tmpfile = full_path + ".tmp"
+        tmpfile = f"{full_path}.tmp"
         with open_utf8(tmpfile, 'w+') as f:
             f.write(new_text)
         os.rename(tmpfile, full_path)
@@ -422,7 +408,7 @@ if check_only:
         print("")
         print("Failed format-check: differences were found in the following files:")
         for fname in difference_files:
-            print("- " + fname)
+            print(f"- {fname}")
         print('Run "make format-fix" to fix these differences automatically')
         exit(1)
     else:

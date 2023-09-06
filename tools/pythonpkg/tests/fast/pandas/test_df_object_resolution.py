@@ -380,10 +380,10 @@ class TestResolveObjectColumns(object):
         converted_col = duckdb.query_df(x, "x", "select * from x").df()
         if pandas.backend == 'numpy_nullable':
             float64 = np.dtype('float64')
-            assert isinstance(converted_col['0'].dtype, float64.__class__) == True
+            assert isinstance(converted_col['0'].dtype, float64.__class__)
         else:
             uint64 = np.dtype('uint64')
-            assert isinstance(converted_col['0'].dtype, uint64.__class__) == True
+            assert isinstance(converted_col['0'].dtype, uint64.__class__)
 
     @pytest.mark.parametrize('pandas', [NumpyPandas()])
     def test_double_object_conversion(self, pandas):
@@ -391,7 +391,7 @@ class TestResolveObjectColumns(object):
         x = pandas.DataFrame({'0': pandas.Series(data=data, dtype='object')})
         converted_col = duckdb.query_df(x, "x", "select * from x").df()
         double_dtype = np.dtype('float64')
-        assert isinstance(converted_col['0'].dtype, double_dtype.__class__) == True
+        assert isinstance(converted_col['0'].dtype, double_dtype.__class__)
 
     @pytest.mark.parametrize('pandas', [NumpyPandas(), ArrowPandas()])
     def test_numpy_object_with_stride(self, pandas):
@@ -436,7 +436,7 @@ class TestResolveObjectColumns(object):
         converted_col = duckdb.query_df(x, "x", "select * from x").df()
         print(converted_col['0'])
         double_dtype = np.dtype('object')
-        assert isinstance(converted_col['0'].dtype, double_dtype.__class__) == True
+        assert isinstance(converted_col['0'].dtype, double_dtype.__class__)
 
     # Most of the time numpy.datetime64 is just a wrapper around a datetime.datetime object
     # But to support arbitrary precision, it can fall back to using an `int` internally
@@ -539,10 +539,10 @@ class TestResolveObjectColumns(object):
     )  # and that the same 2048 (STANDARD_VECTOR_SIZE) values are not being scanned over and over again
     def test_multiple_chunks(self, pandas):
         data = []
-        data += [datetime.date(2022, 9, 13) for x in range(standard_vector_size)]
-        data += [datetime.date(2022, 9, 14) for x in range(standard_vector_size)]
-        data += [datetime.date(2022, 9, 15) for x in range(standard_vector_size)]
-        data += [datetime.date(2022, 9, 16) for x in range(standard_vector_size)]
+        data += [datetime.date(2022, 9, 13) for _ in range(standard_vector_size)]
+        data += [datetime.date(2022, 9, 14) for _ in range(standard_vector_size)]
+        data += [datetime.date(2022, 9, 15) for _ in range(standard_vector_size)]
+        data += [datetime.date(2022, 9, 16) for _ in range(standard_vector_size)]
         x = pandas.DataFrame({'dates': pandas.Series(data=data, dtype='object')})
         res = duckdb.query_df(x, "x", "select distinct * from x").df()
         assert len(res['dates'].__array__()) == 4

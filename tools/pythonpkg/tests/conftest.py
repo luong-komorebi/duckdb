@@ -90,16 +90,13 @@ class NumpyPandas:
         self.pandas = pytest.importorskip("pandas")
 
     def __getattr__(self, __name: str):
-        item = eval(f'self.pandas.{__name}')
-        return item
+        return eval(f'self.pandas.{__name}')
 
 
 def convert_arrow_to_numpy_backend(df):
     pandas = pytest.importorskip("pandas")
     names = df.columns
-    df_content = {}
-    for name in names:
-        df_content[name] = df[name].array.__arrow_array__()
+    df_content = {name: df[name].array.__arrow_array__() for name in names}
     # This should convert the pyarrow chunked arrays into numpy arrays
     return pandas.DataFrame(df_content)
 
@@ -108,7 +105,7 @@ def convert_to_numpy(df):
     if (
         pyarrow_dtypes_enabled
         and pyarrow_dtype != None
-        and any([True for x in df.dtypes if isinstance(x, pyarrow_dtype)])
+        and any(True for x in df.dtypes if isinstance(x, pyarrow_dtype))
     ):
         return convert_arrow_to_numpy_backend(df)
     return df
@@ -126,8 +123,7 @@ class ArrowMockTesting:
         self.assert_frame_equal = convert_and_equal
 
     def __getattr__(self, __name: str):
-        item = eval(f'self.testing.{__name}')
-        return item
+        return eval(f'self.testing.{__name}')
 
 
 # This converts dataframes constructed with 'DataFrame(...)' to pyarrow backed dataframes
@@ -146,8 +142,7 @@ class ArrowPandas:
         self.testing = ArrowMockTesting()
 
     def __getattr__(self, __name: str):
-        item = eval(f'self.pandas.{__name}')
-        return item
+        return eval(f'self.pandas.{__name}')
 
 
 @pytest.fixture(scope="function")
@@ -167,8 +162,8 @@ def require():
         if 'DUCKDB_PYTHON_TEST_EXTENSION_PATH' in os.environ:
             env_extension_path = os.getenv('DUCKDB_PYTHON_TEST_EXTENSION_PATH')
             env_extension_path = env_extension_path.rstrip('/')
-            extension_search_patterns.append(env_extension_path + '/*/*.duckdb_extension')
-            extension_search_patterns.append(env_extension_path + '/*.duckdb_extension')
+            extension_search_patterns.append(f'{env_extension_path}/*/*.duckdb_extension')
+            extension_search_patterns.append(f'{env_extension_path}/*.duckdb_extension')
 
         extension_paths_found = []
         for pattern in extension_search_patterns:
@@ -179,7 +174,7 @@ def require():
 
         for path in extension_paths_found:
             print(path)
-            if path.endswith(extension_name + ".duckdb_extension"):
+            if path.endswith(f"{extension_name}.duckdb_extension"):
                 conn = duckdb.connect(db_name, config={'allow_unsigned_extensions': 'true'})
                 conn.execute(f"LOAD '{path}'")
                 return conn

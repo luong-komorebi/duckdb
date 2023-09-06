@@ -15,7 +15,7 @@ class TestRAPIQuery(object):
     @pytest.mark.parametrize('steps', [1, 2, 3, 4])
     def test_query_chain(self, steps):
         con = duckdb.default_connection
-        amount = int(1000000)
+        amount = 1000000
         rel = None
         for _ in range(steps):
             rel = con.query(f"select i from range({amount}::BIGINT) tbl(i)")
@@ -33,7 +33,7 @@ class TestRAPIQuery(object):
         # Querying a table relation
         rel = rel.query("x", "select * from x")
         result = rel.execute()
-        assert result.fetchall() == [tuple([x]) for x in input]
+        assert result.fetchall() == [(x, ) for x in input]
 
     def test_query_table_unrelated(self, tbl_table):
         con = duckdb.default_connection
@@ -119,12 +119,9 @@ class TestRAPIQuery(object):
 
     def test_replacement_scan_recursion(self):
         con = duckdb.connect()
-        depth_limit = 1000
         import sys
 
-        if sys.platform.startswith('win'):
-            # With the default we reach a stack overflow in the CI
-            depth_limit = 250
+        depth_limit = 250 if sys.platform.startswith('win') else 1000
         con.execute(f"SET max_expression_depth TO {depth_limit}")
         rel = con.sql('select 42')
         rel = con.sql('select * from rel')
